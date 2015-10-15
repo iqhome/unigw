@@ -1,2 +1,2 @@
 # unigw
-Examples for IQHome's universal ethernet gateway 
+Examples for IQHome Universal IoT Gateway 
