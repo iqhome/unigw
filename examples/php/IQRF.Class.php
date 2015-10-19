@@ -73,7 +73,7 @@ class IQRF
         return self::recv();
     }
 
-    public function discovey()
+    public function discovery()
     {
         $com_getNodeNum = "00000700FFFF0700";//array( 0x00, 0x00, 0x02, 0x00, 0xFF, 0xFF );
         self::send($com_getNodeNum);
