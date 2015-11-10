@@ -5,10 +5,12 @@
         <title>IQ Home Universal Gateway Demo</title>
         <script src="js/methods.js" charset="utf-8"></script>
         <script src="js/app.js" charset="utf-8"></script>
+        <link rel="stylesheet" type="text/css" href="//fonts.googleapis.com/css?family=Open+Sans" />
         <style media="screen">
             body{
                 margin: 0 auto;
                 text-align: center;
+                font-family: 'Open Sans';
             }
             button{
             	border: 			0;
@@ -28,8 +30,9 @@
                 position: relative;
             }
             .nodeid{
-                color: #252020;
                 margin-top: 40px;
+                font-size: 18pt;
+                color: #353030;
             }
             .leds{
                 padding: 10px;
@@ -43,7 +46,11 @@
                 margin: 5px;
                 border-width: 1px;
                 border-style: solid;
+                color: #353030;
 
+            }
+            .led:hover{
+                cursor: pointer;
             }
             .ledr{
                 background-color: #FE0001;

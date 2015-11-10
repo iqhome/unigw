@@ -93,9 +93,14 @@ class IQRF
         $com = $naddr.$pnum.$pcom."FFFF";
         //echo $com;
         self::send($com);
+        $status = self::recv();
+        //echo $status."\n";
         $response = self::recv();
-        echo $response;
-        return true;
+        //echo $response."\n";
+        if($response)
+            return true;
+        else
+            return false;
     }
 
     public function discovery()

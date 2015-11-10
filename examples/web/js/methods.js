@@ -52,6 +52,8 @@ function toggleLED(id, led){
 		'state' : state
 	});
 
+	//console.log(dc)
+
 	ajaxJSON(script_interface, "dc="+dc, function(r){
 		if(r.led === true){
 			if(state == 1){

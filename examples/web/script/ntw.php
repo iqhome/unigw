@@ -17,8 +17,11 @@ $map = $iqrf->getNodeMap();
 
 if($map){
     for ($i=0; $i < count($map); $i++) {
-        if($map[$i] != 0){
-            $nodes[] = $i+1;
+        if($map[$i] == 0) continue;
+        for ($j=0; $j < 8; $j++) {
+            if($map[$i] & (1 << $j)){
+                $nodes[] = $j + $i*8 ;
+            }
         }
     }
 }
