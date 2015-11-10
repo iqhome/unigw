@@ -12,7 +12,6 @@ class IQRF
     private $server = NULL;
     private $port = 0;
     private $sock;
-    private $pid = 0;
 
     private $timeout = array('sec'=>2,'usec'=>0);
 
@@ -41,14 +40,7 @@ class IQRF
     {
         if(!$this->sock) return false;
         if(empty($input)) return false;
-
-        $cmd = "00";
-        $this->pid++;
-        $pid = str_pad($this->pid,4,"0", STR_PAD_LEFT);
-
-        $request = $cmd.".".$pid.":".$input;
-
-        if( !socket_sendto($this->sock, $request , strlen($request) , 0 , $this->server , $this->port))
+        if( !socket_sendto($this->sock, $input , strlen($input) , 0 , $this->server , $this->port))
         {
             $errorcode = socket_last_error();
             $errormsg = socket_strerror($errorcode);
