@@ -73,6 +73,31 @@ class IQRF
         return self::recv();
     }
 
+    public function getNodeMap(){
+        $com_getModuleInfo = "00000002FFFF";//array( 0x00, 0x00, 0x02, 0x00, 0xFF, 0xFF );
+        self::send($com_getModuleInfo);
+        $resp = self::recv();
+        if($resp){
+            return str_split(substr($resp, 16),2);
+        }
+        return false;
+    }
+
+    public function setLED($node, $color, $state)
+    {
+        $pnum = $color == 'r' ? '06' :( $color == 'g' ? '07' : false);
+        $pcom = $state === 1 || $state === 0 ? str_pad($state,2,0,STR_PAD_LEFT): false;
+        if($pnum === false || $pcom === false) return false;
+        $addr = str_pad(dechex($node), 4, 0, STR_PAD_LEFT);
+        $naddr = substr($addr,-2).substr($addr,0,2);
+        $com = $naddr.$pnum.$pcom."FFFF";
+        //echo $com;
+        self::send($com);
+        $response = self::recv();
+        echo $response;
+        return true;
+    }
+
     public function discovery()
     {
         $com_getNodeNum = "00000700FFFF0700";//array( 0x00, 0x00, 0x02, 0x00, 0xFF, 0xFF );
