@@ -13,22 +13,12 @@ if(!$iqrf->connect($ip, $port)){
     exit();
 }
 
-$map = $iqrf->getNodeMap();
+$nodemap = $iqrf->getNodeMap();
 
-if($map){
-    for ($i=0; $i < count($map); $i++) {
-        if($map[$i] == 0) continue;
-        for ($j=0; $j < 8; $j++) {
-            if($map[$i] & (1 << $j)){
-                $nodes[] = $j + $i*8 ;
-            }
-        }
-    }
-}
 
-if(isset($nodes)){
+if(isset($nodemap)){
 
-    $response = array('nodes' => $nodes );
+    $response = array('nodes' => $nodemap );
 
     echo json_encode($response);
 }

@@ -1,5 +1,8 @@
 <?php
 
+
+include_once 'dpa.php';
+
 /**
  *
  */
@@ -78,19 +81,42 @@ class IQRF
         self::send($com_getModuleInfo);
         $resp = self::recv();
         if($resp){
-            return str_split(substr($resp, 16),2);
+
+            $map = str_split(substr($resp, 16),2);
+            if($map){
+                for ($i=0; $i < count($map); $i++) {
+                    if($map[$i] == 0) continue;
+                    for ($j=0; $j < 8; $j++) {
+                        if($map[$i] & (1 << $j)){
+                            $nodemap[] = $j + $i*8 ;
+                        }
+                    }
+                }
+                return $nodemap;
+            }
         }
         return false;
     }
 
     public function setLED($node, $color, $state)
     {
-        $pnum = $color == 'r' ? '06' :( $color == 'g' ? '07' : false);
-        $pcom = $state === 1 || $state === 0 ? str_pad($state,2,0,STR_PAD_LEFT): false;
+        $pnum = $color == 'r' ? $_PNUM['PNUM_LEDG'] :( $color == 'g' ? $_PNUM['PNUM_LEDG'] : false);
+        $pcom = $state === 1 || $state === 0 ? $state: false;
         if($pnum === false || $pcom === false) return false;
-        $addr = str_pad(dechex($node), 4, 0, STR_PAD_LEFT);
-        $naddr = substr($addr,-2).substr($addr,0,2);
-        $com = $naddr.$pnum.$pcom."FFFF";
+
+        $comstring = self::create_dpa_request(array(
+                'NADDR' => $node,
+                'PNUM'  => $pnum,
+                'PCMD'  => $pcom,
+                'HWPID' => $_HWPID['ALL'],
+                'PDATA' => false
+        ));
+
+        if($comstring === false){
+            echo "some error with command";
+            return 2;
+        }
+
         //echo $com;
         self::send($com);
         $status = self::recv();
@@ -98,16 +124,57 @@ class IQRF
         $response = self::recv();
         //echo $response."\n";
         if($response)
-            return true;
+            return 0;
         else
-            return false;
+            return 1;
     }
 
-    public function discovery()
+    private function create_dpa_request($request = false){
+
+        if($request === false)
+            return false;
+        if(!isset($request['NADDR'])
+        || !isset($request['PNUM'])
+        || !isset($request['PCMD'])
+        || !isset($request['HWPID'])){
+            return false;
+        }
+        /* create NADDR string */
+        /* test items */
+        if($request['NADDR'] < 0    || $request['NADDR'] > 0xFFFF ){ return false;}
+        if($request['PNUM']  < 0    || $request['PNUM']  > 0xFF ){ return false;}
+        if($request['PCMD']  < 0    || $request['PCMD']  > 0xFF ){ return false;}
+        if($request['HWPID'] < 0    || $request['HWPID'] > 0xFFFF ){ return false;}
+
+        $addr = self::zerofill($request['NADDR']), 4);
+        $naddr = substr($addr,-2).substr($addr,0,2);
+
+        /* create HWPID string */
+        $pnum = self::zerofill($request['PNUM'], 2);
+        /* create HWPID string */
+        $hwpid = self::zerofill($request['HWPID'], 4);
+
+        /* if PDATA avilable create PDATA STRING */
+        if(isset($request['PDATA']) && $request['PDATA'] !== false){
+            for ($i=0; $i < count($request['PDATA']); $i++) {
+                if($request['PDATA'][$i] < 0 || $request['PDATA'][$i] > 0xFF ) {
+                    return false;
+                }
+                $pdata = self::zerofill($request['PDATA'][$i],2);
+            }
+        }
+        /* if PDATA not set create 0 length string */
+        else{
+            $pdata = "";
+        }
+
+        /* create full command string */
+        return $naddr.$pnum.$pcom.$hwpid.$pdata;
+    }
+
+    private function zerofill($value, $length)
     {
-        $com_getNodeNum = "00000700FFFF0700";//array( 0x00, 0x00, 0x02, 0x00, 0xFF, 0xFF );
-        self::send($com_getNodeNum);
-        return self::recv();
+        return str_pad(dechex($value, $length, 0, STR_PAD_LEFT);
     }
 }
 
