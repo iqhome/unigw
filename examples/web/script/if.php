@@ -23,8 +23,8 @@ if(!$iqrf->connect($ip, $port)){
     exit();
 }
 
-if(!$iqrf->setLED($dc->node, $dc->color, $dc->state)){
-    echo "COMFAIL";
+if(($e = $iqrf->setLED($dc->node, $dc->color, $dc->state))){
+    echo "errorCode: ".$e;
     exit();
 }
 
