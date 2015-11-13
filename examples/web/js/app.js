@@ -1,11 +1,8 @@
 
-var script_network = "script/ntw.php";
-
 /* on page load build the network */
 window.onload = function() {
-    ajaxJSON(script_network, "", function(info){
-        createNetwork(info);
-    });
+
+    createNetwork();
 }
 
 /* create newtwork build network nodes from info, which contains the node map */
@@ -13,13 +10,21 @@ function createNetwork(info){
 
     var network = document.getElementById("network");
 
-    if(!info){
-        createSetUpInstructions(network);
-        return;
-    }
-    for (var i = 0; i < info.nodes.length; i++) {
-        createNode(network, info.nodes[i]);
-    }
+    var request = {
+        'action' : 'getNodeMap'
+    };
+
+    ajaxJSON(request, function(response, e){
+		if(!response){
+			showError(e);
+            createSetUpInstructions(network);
+		}
+		else{
+            for (var i = 0; i < response.nodes.length; i++) {
+                createNode(network, response.nodes[i]);
+            }
+		}
+	});
 }
 /* create network nodes like DCTR modules */
 function createNode(parent, id){

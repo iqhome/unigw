@@ -17,7 +17,7 @@ class IQRF
 
     private $NADDR = array(
         'COORDINATOR' => 0,
-        'BROADCAST' => 0xFF
+        'BROADCAST'   => 0xFF
     );
 
     private $HWPID = array(
