@@ -33,13 +33,19 @@ switch ($request->action) {
             $response = false;
             break;
         }
+        $addressinfo = $iqrf->getAddressingInfo();
+        if($addressinfo === false){
+            $response = false;
+            break;
+        }
         $moduleinfo = $iqrf->getModuleInfo();
         if($moduleinfo === false){
             $response = false;
         }
         else{
             $response = json_encode(array(
-                'nodes' => $nodemap ,
+                'nodemap' => $nodemap ,
+                'addressinfo' => $addressinfo,
                 'moduleinfo' => $moduleinfo
             ));
         }
@@ -56,6 +62,12 @@ switch ($request->action) {
         }
         break;
 
+    /* example */
+    /*
+    case 'action':
+        # code...
+        break;
+    */
     default:
         // invalid action
         # code...

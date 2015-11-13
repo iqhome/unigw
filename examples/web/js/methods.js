@@ -1,7 +1,6 @@
 
-var gwio = "php/io.php";
 
-var DebugEnable = true;
+var gwio = "php/io.php";
 
 function ajax(script, request, callback, arg){
 

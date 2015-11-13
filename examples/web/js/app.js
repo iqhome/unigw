@@ -1,4 +1,7 @@
 
+
+var DebugEnable = false;
+
 /* on page load build the network */
 window.onload = function() {
 
@@ -20,33 +23,44 @@ function createNetwork(info){
             createSetUpInstructions(network);
 		}
 		else{
-            createModuleInfo(response.moduleinfo);
-            for (var i = 0; i < response.nodes.length; i++) {
-                createNode(network, response.nodes[i]);
+            createModuleInfo(response);
+            for (var i = 0; i < response.nodemap.length; i++) {
+                createNode(network, response.nodemap[i]);
             }
 		}
 	});
 }
 /* create system info */
-function createModuleInfo(moduleinfo) {
+function createModuleInfo(info) {
 
-    var info = document.createElement("div");
-    info.id = 'info';
-    document.body.appendChild(info);
+    var infocont = document.createElement("div");
+    infocont.id = 'info';
+    document.body.appendChild(infocont);
 
     var head = document.createElement("div");
-    head.innerHTML = "Gateway IQRF module Info";
+    head.innerHTML = "Gateway IQRF Module Info";
     head.className = 'infohead';
-    info.appendChild(head);
+    infocont.appendChild(head);
 
     /* fetch module info into a table */
     var table = document.createElement('table');
-    info.appendChild(table);
+    infocont.appendChild(table);
+
+    var r = document.createElement('tr');
+    table.appendChild(r);
+    var c = document.createElement('td');
+    c.innerHTML = 'Number Of Nodes';
+    r.appendChild(c);
+    var c = document.createElement('td');
+    c.innerHTML = info.addressinfo.DevNr;
+    r.appendChild(c);
+
+    var moduleinfo = info.moduleinfo;
     for (key in moduleinfo) {
         if (moduleinfo.hasOwnProperty(key)) {
             if(key == 'Rssi'
-                || key == 'SupplyVoltage'
-                || key == 'Flags'
+            || key == 'SupplyVoltage'
+            || key == 'Flags'
             ) continue;
             var r = document.createElement('tr');
             table.appendChild(r);

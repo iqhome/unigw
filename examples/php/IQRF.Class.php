@@ -1,7 +1,12 @@
 <?php
 
 /**
+ * Short description for class
  *
+ *
+ * @author     Gergely Sebestyen <sebestyen.gerely@iqhome.org>
+ * @license    http://opensource.org/licenses/MIT
+ * @version    Release: 1.0
  */
 class IQRF
 {
@@ -272,8 +277,6 @@ class IQRF
 
         $binarray = array_map("hexdec", str_split($response, 2));
 
-        //$binarray = str_split($response, 2);
-
         return array(
                 'NADDR' => $binarray[0].$binarray[1],
                 'PNUM'  => $binarray[2],
@@ -292,11 +295,11 @@ class IQRF
     /* */
     public function getModuleInfo()
     {
-        /* setup command */
+        /* setup DPA command */
         $comstring = self::dpa_request(array(
-                        'NADDR' => $this->NADDR['COORDINATOR'], // 0x0000
-                        'PNUM'  => $this->PNUM['PNUM_OS'],  // 0x00
-                        'PCMD'  => $this->PCMD['CMD_OS_READ'], // 0x00
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_OS'],
+                        'PCMD'  => $this->PCMD['CMD_OS_READ'],
                         'HWPID' => $this->HWPID['ALL'],
                         'PDATA' => false
                     ));
@@ -308,9 +311,10 @@ class IQRF
             $r = self::dpa_response($response);
             if($r !== false){
 
+                /* based on the IQRF OS reference guide */
                 $moduleinfo = array(
                     'MID' => strtoupper(self::zf($r['PDATA'][3],2).self::zf($r['PDATA'][2],2).self::zf($r['PDATA'][1],2).self::zf($r['PDATA'][0],2)),
-                    "OsVersion" => self::zf($r['PDATA'][4] >> 4 & 0x0F,1).".".self::zf($r['PDATA'][4] & 0x0F,2).$this->OSPOSTFIX[$r['PDATA'][5] & 0x07], // major minor and postfix
+                    "OsVersion" => self::zf($r['PDATA'][4] >> 4 & 0x0F,1).".".self::zf($r['PDATA'][4] & 0x0F,2).$this->OSPOSTFIX[$r['PDATA'][5] & 0x07],
                     "OsBuild" => self::zf($r['PDATA'][6] | $r['PDATA'][7] << 8,4),
                     "McuType" => $this->MCU_TYPE[$r['PDATA'][5] & 0x07],
                     "TrSeries" => $this->TR_DC[$r['PDATA'][3] & 0x80?1:0].$this->TR_SERIES[$r['PDATA'][5] >> 4 & 0x0F],
@@ -323,27 +327,40 @@ class IQRF
         }
         return false;
     }
-    public function getNodeNum()
+    public function getAddressingInfo()
     {
         $comstring = self::dpa_request(array(
-                        'NADDR' => $this->NADDR['COORDINATOR'], // 0x0000
-                        'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],  // 0x00
-                        'PCMD'  => $this->PCMD['CMD_COORDINATOR_ADDR_INFO'], // 0x00
-                        'HWPID' => $this->HWPID['ALL'], // 0xFFFF
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],
+                        'PCMD'  => $this->PCMD['CMD_COORDINATOR_ADDR_INFO'],
+                        'HWPID' => $this->HWPID['ALL'],
                         'PDATA' => false
                     ));
         if(!self::send($comstring)){
             return false;
         }
-        return 0;
+        /* recieve DPA response from coordinator */
+        $response =  self::recv();
+        if($response !== false){
+            $r = self::dpa_response($response);
+            if($r !== false){
+
+                $addressinginfo = array(
+                    'DevNr' => $r['PDATA'][0],
+                    "DID" => $r['PDATA'][1]
+                );
+            return $addressinginfo;
+            }
+        }
+        return false;
     }
 
     public function getNodeMap(){
         $comstring = self::dpa_request(array(
-                        'NADDR' => $this->NADDR['COORDINATOR'], // 0x0000
-                        'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],  // 0x00
-                        'PCMD'  => $this->PCMD['CMD_COORDINATOR_BONDED_DEVICES'], // 0x02
-                        'HWPID' => $this->HWPID['ALL'], // 0xFFFF
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],
+                        'PCMD'  => $this->PCMD['CMD_COORDINATOR_BONDED_DEVICES'],
+                        'HWPID' => $this->HWPID['ALL'],
                         'PDATA' => false
                     ));
         if(!self::send($comstring)){
@@ -398,6 +415,42 @@ class IQRF
             return 2;
         }
     }
+
+    /* example method */
+    /*
+    public function method()
+    {
+        // create a DPA request structure hex string
+        // the specific segments should be selected from predefined arrays based on the DPA datasheet
+        // PDATA should be a decimal (byte) array
+        $comstring = self::dpa_request(array(
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],
+                        'PCMD'  => $this->PCMD['CMD_COORDINATOR_ADDR_INFO'],
+                        'HWPID' => $this->HWPID['ALL'],
+                        'PDATA' => false
+                    ));
+        // send DPA request hex string to the daemon
+        if(!self::send($comstring)){
+            return false;
+        }
+        // recieve DPA response from daemon/coordinator and check error
+        $response =  self::recv();
+        if($response !== false){
+            // parse DPA response hex string and create a DPA command like array structure
+            $r = self::dpa_response($response);
+            if($r !== false){
+                // for the simplier usage create a specific data array from response PDATA based on the DPA datasheet
+                $addressinginfo = array(
+                    'DevNr' => $r['PDATA'][0],
+                    "DID" => $r['PDATA'][1]
+                );
+            return $addressinginfo;
+            }
+        }
+        return false;
+    }
+    */
 }
 
 
