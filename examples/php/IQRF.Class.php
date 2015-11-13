@@ -196,7 +196,7 @@ class IQRF
         return $reply;
     }
 
-    private function create_dpa_request($request = false){
+    private function dpa_request($request = false){
 
         if($request === false){
             echo "nodata";
@@ -233,6 +233,10 @@ class IQRF
         return $naddr.$pnum.$pcmd.$hwpid.$pdata;
     }
 
+    private function dpa_response($response = false){
+
+    }
+
     private function zerofill($value, $length){
         return str_pad(dechex($value), $length, 0, STR_PAD_LEFT);
     }
@@ -240,22 +244,25 @@ class IQRF
     /* */
     public function getModuleInfo()
     {
-        $com_getModuleInfo = "00000200FFFF";//array( 0x00, 0x00, 0x02, 0x00, 0xFF, 0xFF );
-        $comstring = self::create_dpa_request(array(
-                        'NADDR' => $node,
-                        'PNUM'  => $pnum,
-                        'PCMD'  => $pcom,
+        /* setup command */
+        $comstring = self::dpa_request(array(
+                        'NADDR' => $this->NADDR['COORDINATOR'], // 0x0000
+                        'PNUM'  => $this->PNUM['PNUM_OS'],  // 0x00
+                        'PCMD'  => $this->PCMD['CMD_OS_READ'], // 0x00
                         'HWPID' => $this->HWPID['ALL'],
                         'PDATA' => false
                     ));
-        self::send($com_getModuleInfo);
-        return self::recv();
+        /* send DPA request */
+        self::send($comstring);
+        /* recieve DPA response from coordinator */
+        $response =  self::recv();
+        return $response;
     }
     public function getNodeNum()
     {
-        $comstring = self::create_dpa_request(array(
+        $comstring = self::dpa_request(array(
                         'NADDR' => $this->NADDR['COORDINATOR'], // 0x0000
-                        'PNUM'  => $this->PNUM['COORDINATOR'],  // 0x00
+                        'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],  // 0x00
                         'PCMD'  => $this->PCMD['CMD_COORDINATOR_ADDR_INFO'], // 0x00
                         'HWPID' => $this->HWPID['ALL'], // 0xFFFF
                         'PDATA' => false
@@ -267,9 +274,9 @@ class IQRF
     }
 
     public function getNodeMap(){
-        $comstring = self::create_dpa_request(array(
+        $comstring = self::dpa_request(array(
                         'NADDR' => $this->NADDR['COORDINATOR'], // 0x0000
-                        'PNUM'  => $this->PNUM['COORDINATOR'],  // 0x00
+                        'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],  // 0x00
                         'PCMD'  => $this->PCMD['CMD_COORDINATOR_BONDED_DEVICES'], // 0x02
                         'HWPID' => $this->HWPID['ALL'], // 0xFFFF
                         'PDATA' => false
@@ -301,9 +308,9 @@ class IQRF
         $pnum = $color == 'r' ? $this->PNUM['PNUM_LEDR'] :( $color == 'g' ? $this->PNUM['PNUM_LEDG'] : false);
         $pcom = $state === 1 || $state === 0 ? $state: false;
         if($pnum === false || $pcom === false) {
-            return 2;
+            return 1;
         }
-        $comstring = self::create_dpa_request(array(
+        $comstring = self::dpa_request(array(
                         'NADDR' => $node,
                         'PNUM'  => $pnum,
                         'PCMD'  => $pcom,
@@ -311,21 +318,20 @@ class IQRF
                         'PDATA' => false
                     ));
         if(!$comstring){
+            return 2;
+        }
+        if(!self::send($comstring)){
             return 3;
         }
-        //echo $comstring;
-
-        if(!self::send($comstring)){
-            return 4;
-        }
-        $status = self::recv();
-        //echo $status."\n";
-        $response = self::recv();
-        //echo $response."\n";
-        if($response)
+        $status = self::recv();     // status confirmation from coordinator
+        $noderesponse = self::recv();   // response from node, if node unaccessible -> socket timeout
+        if($noderesponse){
+            $response = self::dpa_response($noderesponse);
             return 0;
-        else
-            return 1;
+        }
+        else{
+            return 2;
+        }
     }
 }
 

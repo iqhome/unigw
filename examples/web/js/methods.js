@@ -8,7 +8,6 @@ function ajax(script, query, callback, arg){
 		if (r.readyState != 4 || r.status != 200){
 		 	return;
 		}
-		console.log(r.responseText);
 		if(r.responseText != ''){
             try {
             	callback(r.responseText, arg);
@@ -21,7 +20,7 @@ function ajax(script, query, callback, arg){
 	r.open("POST", script , true);
 	r.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 	//r.timeout = 2000;
-	//r.ontimeout = function () { alert("Request timeout out!!!"); }
+	//r.ontimeout = function () { console.log("Request timeout occured!"); }
 	r.send(query);
 }
 
@@ -36,7 +35,7 @@ function ajaxJSON (script , query , callback, arg) {
         }
         catch(e){
             //console.log(e);
-        	callback(false, arg);
+        	callback(false, d);
         }
     }, arg);
 }
@@ -54,13 +53,18 @@ function toggleLED(id, led){
 
 	//console.log(dc)
 
-	ajaxJSON(script_interface, "dc="+dc, function(r){
-		if(r.led === true){
-			if(state == 1){
-				led.classList.remove("ledoff");
-			}
-			else{
-				led.classList.add("ledoff");
+	ajaxJSON(script_interface, "dc="+dc, function(response, e){
+		if(!response){
+			showError(e);
+		}
+		else{
+			if(response.led === true){
+				if(state == 1){
+					led.classList.remove("ledoff");
+				}
+				else{
+					led.classList.add("ledoff");
+				}
 			}
 		}
 	});
