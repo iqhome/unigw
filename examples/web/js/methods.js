@@ -1,5 +1,7 @@
 
-var gwio = "script/io.php";
+var gwio = "php/io.php";
+
+var DebugEnable = true;
 
 function ajax(script, request, callback, arg){
 
@@ -8,7 +10,8 @@ function ajax(script, request, callback, arg){
 		if (r.readyState != 4 || r.status != 200){
 		 	return;
 		}
-		console.log(r.responseText);
+		if(DebugEnable)
+			console.log(r.responseText);
 		if(r.responseText != ''){
             try {
             	callback(r.responseText, arg);
@@ -27,10 +30,7 @@ function ajax(script, request, callback, arg){
 
 function ajaxJSON (request , callback, arg) {
 
-	console.log(request);
-
 	var json = JSON.stringify(request);
-
 	if(!json) return false;
 
     ajax(gwio, "request="+json, function(d) {
@@ -41,7 +41,8 @@ function ajaxJSON (request , callback, arg) {
         	callback(json, arg);
         }
         catch(e){
-            //console.log(e);
+			if(DebugEnable)
+				console.log(e);
         	callback(false, d);
         }
     }, arg);

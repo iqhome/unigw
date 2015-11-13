@@ -20,11 +20,44 @@ function createNetwork(info){
             createSetUpInstructions(network);
 		}
 		else{
+            createModuleInfo(response.moduleinfo);
             for (var i = 0; i < response.nodes.length; i++) {
                 createNode(network, response.nodes[i]);
             }
 		}
 	});
+}
+/* create system info */
+function createModuleInfo(moduleinfo) {
+
+    var info = document.createElement("div");
+    info.id = 'info';
+    document.body.appendChild(info);
+
+    var head = document.createElement("div");
+    head.innerHTML = "Gateway IQRF module Info";
+    head.className = 'infohead';
+    info.appendChild(head);
+
+    /* fetch module info into a table */
+    var table = document.createElement('table');
+    info.appendChild(table);
+    for (key in moduleinfo) {
+        if (moduleinfo.hasOwnProperty(key)) {
+            if(key == 'Rssi'
+                || key == 'SupplyVoltage'
+                || key == 'Flags'
+            ) continue;
+            var r = document.createElement('tr');
+            table.appendChild(r);
+            var c = document.createElement('td');
+            c.innerHTML = key;
+            r.appendChild(c);
+            var c = document.createElement('td');
+            c.innerHTML = moduleinfo[key];
+            r.appendChild(c);
+        }
+    }
 }
 /* create network nodes like DCTR modules */
 function createNode(parent, id){

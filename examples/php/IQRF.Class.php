@@ -151,6 +151,38 @@ class IQRF
         'FRC_USER_2BYTE_TO' => 0xFF
     );
 
+    private $TR_SERIES = array(
+        "TR-52D",      //0
+        "TR-58D-RJ",    //1
+        "TR-72D",       //2
+        "TR-53D",       //3
+        "",             //4
+        "",             //5
+        "",             //6
+        "",             //7
+        "TR-54D",       //8
+        "TR-55D",       //9
+        "TR-56D",       //10
+        "TR-76D"        //11
+    );
+
+    private $TR_DC= array("","DC");
+
+    private $MCU_TYPE= array(
+        "",//0
+        "",//1
+        "",//2
+        "PIC16F886",//3
+        "PIC16LF1938"//4
+    );
+    private $OSPOSTFIX = array(
+        "",//0
+        "",//1
+        "",//2
+        "",//3
+        "D"//4
+    );
+
     function __construct()
     {
 
@@ -208,14 +240,14 @@ class IQRF
         if(!is_numeric($request['PCMD'] ) || $request['PCMD']  < 0 || $request['PCMD']  > 0xFF ){ echo "invalid pcmd";return false;}
         if(!is_numeric($request['HWPID']) || $request['HWPID'] < 0 || $request['HWPID'] > 0xFFFF ){ echo "invalid hwpid";return false;}
         /* create NADDR string */
-        $addr = self::zerofill($request['NADDR'], 4);
+        $addr = self::zf($request['NADDR'], 4);
         $naddr = substr($addr,-2).substr($addr,0,2);
         /* create PNUM string */
-        $pnum = self::zerofill($request['PNUM'], 2);
+        $pnum = self::zf($request['PNUM'], 2);
         /* create PCMD string */
-        $pcmd = self::zerofill($request['PCMD'], 2);
+        $pcmd = self::zf($request['PCMD'], 2);
         /* create HWPID string */
-        $hwpid = self::zerofill($request['HWPID'], 4);
+        $hwpid = self::zf($request['HWPID'], 4);
         /* if PDATA avilable create PDATA STRING */
         if(isset($request['PDATA']) && $request['PDATA'] !== false){
             for ($i=0; $i < count($request['PDATA']); $i++) {
@@ -223,7 +255,7 @@ class IQRF
                     echo "invalid pdata item";
                     return false;
                 }
-                $pdata = self::zerofill($request['PDATA'][$i],2);
+                $pdata = self::zf($request['PDATA'][$i],2);
             }
         }
         else{
@@ -234,10 +266,26 @@ class IQRF
     }
 
     private function dpa_response($response = false){
+        if($response === false){
+            return false;
+        }
 
+        $binarray = array_map("hexdec", str_split($response, 2));
+
+        //$binarray = str_split($response, 2);
+
+        return array(
+                'NADDR' => $binarray[0].$binarray[1],
+                'PNUM'  => $binarray[2],
+                'PCMD'  => $binarray[3],
+                'HWPID' => $binarray[4].$binarray[5],
+                'ErrN'  => $binarray[6],
+                'DpaValue' => $binarray[7],
+                'PDATA' => array_slice($binarray, 8)
+            );
     }
-
-    private function zerofill($value, $length){
+    /* zero fill */
+    private function zf($value, $length){
         return str_pad(dechex($value), $length, 0, STR_PAD_LEFT);
     }
 
@@ -256,7 +304,24 @@ class IQRF
         self::send($comstring);
         /* recieve DPA response from coordinator */
         $response =  self::recv();
-        return $response;
+        if($response !== false){
+            $r = self::dpa_response($response);
+            if($r !== false){
+
+                $moduleinfo = array(
+                    'MID' => strtoupper(self::zf($r['PDATA'][3],2).self::zf($r['PDATA'][2],2).self::zf($r['PDATA'][1],2).self::zf($r['PDATA'][0],2)),
+                    "OsVersion" => self::zf($r['PDATA'][4] >> 4 & 0x0F,1).".".self::zf($r['PDATA'][4] & 0x0F,2).$this->OSPOSTFIX[$r['PDATA'][5] & 0x07], // major minor and postfix
+                    "OsBuild" => self::zf($r['PDATA'][6] | $r['PDATA'][7] << 8,4),
+                    "McuType" => $this->MCU_TYPE[$r['PDATA'][5] & 0x07],
+                    "TrSeries" => $this->TR_DC[$r['PDATA'][3] & 0x80?1:0].$this->TR_SERIES[$r['PDATA'][5] >> 4 & 0x0F],
+                    "Rssi" => $r['PDATA'][8],
+                    "SupplyVoltage" => $r['PDATA'][9],
+                    "Flags" => $r['PDATA'][10]
+                );
+            return $moduleinfo;
+            }
+        }
+        return false;
     }
     public function getNodeNum()
     {

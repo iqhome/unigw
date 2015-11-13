@@ -31,9 +31,17 @@ switch ($request->action) {
         $nodemap = $iqrf->getNodeMap();
         if($nodemap === false){
             $response = false;
+            break;
+        }
+        $moduleinfo = $iqrf->getModuleInfo();
+        if($moduleinfo === false){
+            $response = false;
         }
         else{
-            $response = json_encode(array('nodes' => $nodemap ));
+            $response = json_encode(array(
+                'nodes' => $nodemap ,
+                'moduleinfo' => $moduleinfo
+            ));
         }
         break;
 
