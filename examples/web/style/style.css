@@ -1,0 +1,97 @@
+body{
+    margin: 0 auto;
+    text-align: center;
+    font-family: 'Open Sans';
+    color: #353030;
+}
+button{
+    border: 			0;
+    outline: 				none;
+}
+#network{
+    position: relative;
+    margin: 0 auto;
+    top: 160px;
+    width: 90vw;
+}
+.node{
+    border: 1px solid  #C00000;
+    width: 96px;
+    height: 170px;
+    margin: 10px;
+    display: inline-block;
+    position: relative;
+}
+.nodeid{
+    margin-top: 40px;
+    font-size: 18pt;
+}
+.leds{
+    padding: 10px;
+    position: absolute;
+    bottom: 0;
+    text-align: center;
+}
+.led{
+    height: 45px;
+    width: 26px;
+    margin: 5px;
+    border-width: 1px;
+    border-style: solid;
+
+}
+.led:hover{
+    cursor: pointer;
+}
+.ledr{
+    background-color: #FE0001;
+    border-color: transparent;
+}
+.ledg{
+    background-color: #6FFF00;
+    border-color: transparent;
+}
+.ledoff{
+    border-color: grey !important;
+    background-color: transparent;
+}
+
+.title{
+    position: relative;
+    top: 25px;
+    font-size: 16pt;
+}
+.subtitle{
+    font-size: 14pt;
+}
+.infohead{
+    font-size: 12pt;
+    text-align: left;
+    padding-left: 10px;
+    margin-bottom: 15px;
+}
+#info{
+    position: absolute;
+    top: 15px;
+    left: 15px;
+    border: 1px solid transparent;
+    padding: 10px;
+}
+#info td{
+    font-size:  10pt;
+    padding: 0 15px 1px 10px;
+    text-align: left;
+}
+
+.error-window{
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    width: 250px;
+    min-height: 20px;
+    border: 1px solid #aaa;
+    padding: 18px;
+    text-align: left;
+    font-size: 11pt;
+    white-space: pre-wrap;
+}
