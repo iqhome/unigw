@@ -1,6 +1,9 @@
 <?php
 
+echo "\nThis example show how to communicate with the\nIQRF DPA compatible Universal Gateway Daemon!\n\n";
+
 include_once 'IQRF.Class.php';
+
 
 $ip = "127.0.0.1";
 $port = 5000;
@@ -12,12 +15,23 @@ if(!$iqrf->connect($ip, $port)){
     exit();
 }
 
-$response = $iqrf->getModuleInfo();
-if($response)
-    echo "Module Info: ".$response."\n";
+if(($response = $iqrf->getModuleInfo()) !== false){
+    echo "Module Info:\n";
+    print_r($response);
+    echo"\n";
+}
+else{
+    echo "Can't get Module info!";
+    exit();
+}
 
-$response = $iqrf->getNodeNum();
-if($response)
-    echo "Node num:    ".$response."\n";
-
+if(($response = $iqrf->getAddressingInfo()) !== false){
+    echo "Number of nodes:\n";
+    print_r($response);
+    echo"\n";
+}
+else{
+    echo "Can't get addressing info!";
+    exit();
+}
 ?>

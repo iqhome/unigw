@@ -24,6 +24,8 @@ if(!$iqrf->connect($ip, $port)){
     echo "FAIL";
     exit();
 }
+/* default error message */
+$errormsg = "FAIL";
 
 switch ($request->action) {
     /* get node map */
@@ -56,6 +58,7 @@ switch ($request->action) {
         if(($e = $iqrf->setLED($request->node, $request->color, $request->state))){
             //echo "Can't set LED!    errorCode: ".$e;
             $response = false;
+            $errormsg = "Node unreachable!";
         }
         else{
             $response = json_encode(array('led' => true ));
@@ -65,7 +68,7 @@ switch ($request->action) {
     /* example */
     /*
     case 'action':
-        # code...
+        $response = $iqrf -> method(arguments);
         break;
     */
     default:
@@ -78,7 +81,7 @@ if(isset($response) && $response !== false){
     echo $response;
 }
 else{
-    echo 'FAIL';
+    echo $errormsg;
 }
 
 exit();

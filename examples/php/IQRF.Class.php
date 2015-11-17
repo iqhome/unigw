@@ -405,8 +405,8 @@ class IQRF
         if(!self::send($comstring)){
             return 3;
         }
-        $status = self::recv();     // status confirmation from coordinator
-        $noderesponse = self::recv();   // response from node, if node unaccessible -> socket timeout
+        $status = self::recv();             // status confirmation from coordinator
+        $noderesponse = self::recv();       // response from node, if node unaccessible -> socket timeout
         if($noderesponse){
             $response = self::dpa_response($noderesponse);
             return 0;
@@ -417,24 +417,34 @@ class IQRF
     }
 
     /* example method */
+
     /*
     public function method()
     {
-        // create a DPA request structure hex string
-        // the specific segments should be selected from predefined arrays based on the DPA datasheet
+        // First create a DPA request structure
+        // The dpa_request method converts the request structure to a hex string appropriate format to DPA request
+        // The specific segments should be selected from predefined arrays based on the DPA datasheet
         // PDATA should be a decimal (byte) array
+
         $comstring = self::dpa_request(array(
-                        'NADDR' => $this->NADDR['COORDINATOR'],
-                        'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],
-                        'PCMD'  => $this->PCMD['CMD_COORDINATOR_ADDR_INFO'],
-                        'HWPID' => $this->HWPID['ALL'],
-                        'PDATA' => false
+                        'NADDR' => $this->NADDR['xx'],   // set NADDR
+                        'PNUM'  => $this->PNUM['xx'],    // set PNUM
+                        'PCMD'  => $this->PCMD['xx'],    // set HWPID
+                        'HWPID' => $this->HWPID['xx'],   // set HWPID
+                        'PDATA' => false                 // set PDATA
                     ));
-        // send DPA request hex string to the daemon
+
+        // send DPA request hex string to the Universal Gateway Daemon
         if(!self::send($comstring)){
             return false;
         }
         // recieve DPA response from daemon/coordinator and check error
+        // if the requset address is not the coordinator
+        // recieve status response from coordinator and check error
+        $status = self::recv();
+
+        // if the requset address is not the coordinator
+        // recieve DPA response from network nodes and check error
         $response =  self::recv();
         if($response !== false){
             // parse DPA response hex string and create a DPA command like array structure

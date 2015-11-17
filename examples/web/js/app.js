@@ -27,6 +27,11 @@ function createNetwork(info){
             for (var i = 0; i < response.nodemap.length; i++) {
                 createNode(network, response.nodemap[i]);
             }
+            /*
+            for (var i = 0; i < 150; i++) {
+                createNode(network, i+1);
+            }
+            */
 		}
 	});
 }
