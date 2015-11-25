@@ -1,15 +1,14 @@
 <?php
 
 /**
- * Short description for class
- *
+ * @brief  The IQRF Class for Universal Gateway daemon UDP interface
  *
  * @author     Gergely Sebestyen <sebestyen.gerely@iqhome.org>
  * @license    http://opensource.org/licenses/MIT
  * @version    Release: 1.0
  */
-class IQRF
-{
+
+class IQRF{
 
     public $errorcode = 0;
     public $errormsg = NULL;
@@ -20,6 +19,11 @@ class IQRF
 
     private $timeout = array('sec'=>2,'usec'=>0);
 
+
+    /*
+    * Constants for IQRF DPA commands
+    * for details see IQRF DPA Framework Technical Guide
+    */
     private $NADDR = array(
         'COORDINATOR' => 0,
         'BROADCAST'   => 0xFF
@@ -188,13 +192,15 @@ class IQRF
         "D"//4
     );
 
-    function __construct()
-    {
-
+    function __construct(){
     }
-
-    public function connect($ip, $port)
-    {
+    /**
+    * @brief Initialize connection - create a UDP socket
+    * @param ip - IP address of gateway - default: "127.0.0.1"
+    * @param port - gateway interface port - default: 5000
+    * @return true if initialization was successful, false otherwise
+    */
+    public function connect($ip = "127.0.0.1", $port = 5000){
 
         if(empty($ip) || empty($port)) return false;
         $this->server = $ip;
@@ -208,12 +214,16 @@ class IQRF
 
         return true;
     }
+    /**
+    * @brief Send hex string message to Universal Gateway daemon UDP interface
+    * @param message - IQRF DPA compatible hex string
+    * @return true if sending of message was successful, false otherwise
+    */
+    private function send($message){
 
-    private function send($input)
-    {
         if(!$this->sock) return false;
-        if(empty($input) || $input == "") return false;
-        if( !socket_sendto($this->sock, $input , strlen($input) , 0 , $this->server , $this->port))
+        if(empty($message) || $message == "") return false;
+        if( !socket_sendto($this->sock, $message , strlen($message) , 0 , $this->server , $this->port))
         {
             $errorcode = socket_last_error();
             $errormsg = socket_strerror($errorcode);
@@ -221,8 +231,12 @@ class IQRF
         }
         return true;
     }
-
-    private function recv(){
+    /**
+    * @brief Receive hex string message to Universal Gateway daemon UDP interface
+    * @param message - IQRF DPA compatible hex string
+    * @return true if receive was successful, false otherwise socket or timeout error
+    */
+    private function receive(){
         if(!$this->sock) return false;
         if(socket_recv ( $this->sock , $reply , 2045 , MSG_WAITALL ) === FALSE)
         {
@@ -232,7 +246,11 @@ class IQRF
         }
         return $reply;
     }
-
+    /**
+    * @brief Build a hex string request from IQRF DPA format array
+    * @param request - IQRF DPA compatible array
+    * @return IQRF DPA hex string if build was successful, false in case of some error
+    */
     private function dpa_request($request = false){
 
         if($request === false){
@@ -269,14 +287,22 @@ class IQRF
         /* create full command string */
         return $naddr.$pnum.$pcmd.$hwpid.$pdata;
     }
-
+    /**
+    * @brief Parse and build a IQRF DPA array response from hex string
+    * @param response - received hex string from the Universal Gateway daemon interface
+    * @return IQRF DPA hex string if build was successful, false in case of some error
+    */
     private function dpa_response($response = false){
         if($response === false){
             return false;
         }
-
+        /* validate response */
+        if(strlen($response) < 8){ // minimum DPA response length
+            return false;
+        }
+        /* convert response */
         $binarray = array_map("hexdec", str_split($response, 2));
-
+        /* build DPA compatible response command */
         return array(
                 'NADDR' => $binarray[0].$binarray[1],
                 'PNUM'  => $binarray[2],
@@ -287,15 +313,19 @@ class IQRF
                 'PDATA' => array_slice($binarray, 8)
             );
     }
-    /* zero fill */
+    /**
+    * @brief Zerofill hex string
+    * @param value - target value e.g.: 5F
+    * @param length - required length of value e.g.: 4
+    * @return zero filled value e.g.: 005F
+    */
     private function zf($value, $length){
         return str_pad(dechex($value), $length, 0, STR_PAD_LEFT);
     }
 
-    /* */
     public function getModuleInfo()
     {
-        /* setup DPA command */
+        /* setup DPA command string*/
         $comstring = self::dpa_request(array(
                         'NADDR' => $this->NADDR['COORDINATOR'],
                         'PNUM'  => $this->PNUM['PNUM_OS'],
@@ -305,13 +335,14 @@ class IQRF
                     ));
         /* send DPA request */
         self::send($comstring);
-        /* recieve DPA response from coordinator */
-        $response =  self::recv();
+        /* receive DPA response string from coordinator */
+        $response =  self::receive();
         if($response !== false){
+            /* process response and parse message to IQRF DPA format */
             $r = self::dpa_response($response);
+            /* check response validity */
             if($r !== false){
-
-                /* based on the IQRF OS reference guide */
+                /* build Module Info array -> based on the IQRF OS reference guide */
                 $moduleinfo = array(
                     'MID' => strtoupper(self::zf($r['PDATA'][3],2).self::zf($r['PDATA'][2],2).self::zf($r['PDATA'][1],2).self::zf($r['PDATA'][0],2)),
                     "OsVersion" => self::zf($r['PDATA'][4] >> 4 & 0x0F,1).".".self::zf($r['PDATA'][4] & 0x0F,2).$this->OSPOSTFIX[$r['PDATA'][5] & 0x07],
@@ -339,8 +370,8 @@ class IQRF
         if(!self::send($comstring)){
             return false;
         }
-        /* recieve DPA response from coordinator */
-        $response =  self::recv();
+        /* receive DPA response from coordinator */
+        $response =  self::receive();
         if($response !== false){
             $r = self::dpa_response($response);
             if($r !== false){
@@ -366,7 +397,7 @@ class IQRF
         if(!self::send($comstring)){
             return false;
         }
-        $resp = self::recv();
+        $resp = self::receive();
         if($resp){
 
             $map = str_split(substr($resp, 16),2);
@@ -405,8 +436,8 @@ class IQRF
         if(!self::send($comstring)){
             return 3;
         }
-        $status = self::recv();             // status confirmation from coordinator
-        $noderesponse = self::recv();       // response from node, if node unaccessible -> socket timeout
+        $status = self::receive();             // status confirmation from coordinator
+        $noderesponse = self::receive();       // response from node, if node unaccessible -> socket timeout
         if($noderesponse){
             $response = self::dpa_response($noderesponse);
             return 0;
@@ -438,14 +469,14 @@ class IQRF
         if(!self::send($comstring)){
             return false;
         }
-        // recieve DPA response from daemon/coordinator and check error
+        // receive DPA response from daemon/coordinator and check error
         // if the requset address is not the coordinator
-        // recieve status response from coordinator and check error
-        $status = self::recv();
+        // receive status response from coordinator and check error
+        $status = self::receive();
 
         // if the requset address is not the coordinator
-        // recieve DPA response from network nodes and check error
-        $response =  self::recv();
+        // receive DPA response from network nodes and check error
+        $response =  self::receive();
         if($response !== false){
             // parse DPA response hex string and create a DPA command like array structure
             $r = self::dpa_response($response);

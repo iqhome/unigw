@@ -5,13 +5,10 @@ echo "\nThis example show how to communicate with the\nIQRF DPA compatible Unive
 include_once 'IQRF.Class.php';
 
 
-$ip = "127.0.0.1";
-$port = 5000;
-
 $iqrf = new IQRF();
 
-if(!$iqrf->connect($ip, $port)){
-    echo "Can't connect!";
+if(!$iqrf->connect()){
+    echo "Can't create socket!";
     exit();
 }
 
