@@ -530,6 +530,17 @@ class IQRF{
         // receive status response from coordinator and check error
         $status = self::receive();
 
+        // check errors
+        $s = self::dpa_response($response);
+        if(!$s){
+            return false;
+        }
+        if($s['ErrN'] == 0xFF){ // status confirmation
+            $this->errorcode = $s['ErrN'];
+            $this->errormsg = "";
+            return false;
+        }
+
         // if the requset address is not the coordinator
         // receive DPA response from network nodes and check error
         $response =  self::receive();
