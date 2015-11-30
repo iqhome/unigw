@@ -19,7 +19,6 @@ class IQRF{
 
     private $timeout = array('sec'=>2,'usec'=>0);
 
-
     /*
     * Constants for IQRF DPA commands
     * for details see IQRF DPA Framework Technical Guide

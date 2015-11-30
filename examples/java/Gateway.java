@@ -1,11 +1,11 @@
 import unigw.IQRF;
 
 
-public class Main {
+public class Gateway {
 
 	public static void main(String[] args) {
 
-		String hostname = "192.168.0.133";
+		String hostname = "127.0.0.1";
 		int port = 5000;
 
 
