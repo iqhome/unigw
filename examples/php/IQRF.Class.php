@@ -10,14 +10,16 @@
 
 class IQRF{
 
-    public $errorcode = 0;
-    public $errormsg = NULL;
+
 
     private $server = NULL;
     private $port = 0;
     private $sock;
 
-    private $timeout = array('sec'=>2,'usec'=>0);
+    private $timeout = array('sec'=>2,'usec'=>0); // UDP socket timeout, depends on IQRF network communication timing
+
+    public $errorcode = 0; // error code for last error
+    public $errormsg = NULL; // error text message for las error
 
     /*
     * Constants for IQRF DPA commands
@@ -193,6 +195,7 @@ class IQRF{
 
     function __construct(){
     }
+
     /**
     * @brief Initialize connection - create a UDP socket
     * @param ip - IP address of gateway - default: "127.0.0.1"
@@ -213,6 +216,7 @@ class IQRF{
 
         return true;
     }
+
     /**
     * @brief Send hex string message to Universal Gateway daemon UDP interface
     * @param message - IQRF DPA compatible hex string
@@ -230,6 +234,7 @@ class IQRF{
         }
         return true;
     }
+
     /**
     * @brief Receive hex string message to Universal Gateway daemon UDP interface
     * @param message - IQRF DPA compatible hex string
@@ -245,6 +250,7 @@ class IQRF{
         }
         return $reply;
     }
+
     /**
     * @brief Build a hex string request from IQRF DPA format array
     * @param request - IQRF DPA compatible array
@@ -286,6 +292,7 @@ class IQRF{
         /* create full command string */
         return $naddr.$pnum.$pcmd.$hwpid.$pdata;
     }
+
     /**
     * @brief Parse and build a IQRF DPA array response from hex string
     * @param response - received hex string from the Universal Gateway daemon interface
@@ -312,6 +319,7 @@ class IQRF{
                 'PDATA' => array_slice($binarray, 8)
             );
     }
+
     /**
     * @brief Zerofill hex string
     * @param value - target value e.g.: 5F
@@ -322,6 +330,11 @@ class IQRF{
         return str_pad(dechex($value), $length, 0, STR_PAD_LEFT);
     }
 
+    /**
+    * @brief get Module Info DPA request
+    * @param
+    * @return DPA response array or false in case of some error
+    */
     public function getModuleInfo()
     {
         /* setup DPA command string*/
@@ -333,7 +346,9 @@ class IQRF{
                         'PDATA' => false
                     ));
         /* send DPA request */
-        self::send($comstring);
+        if(!self::send($comstring)){
+            return false;
+        }
         /* receive DPA response string from coordinator */
         $response =  self::receive();
         if($response !== false){
@@ -357,8 +372,15 @@ class IQRF{
         }
         return false;
     }
+
+    /**
+    * @brief get Addressing Info DPA request
+    * @param
+    * @return DPA response array or false in case of some error
+    */
     public function getAddressingInfo()
     {
+        /* setup DPA command string*/
         $comstring = self::dpa_request(array(
                         'NADDR' => $this->NADDR['COORDINATOR'],
                         'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],
@@ -366,15 +388,17 @@ class IQRF{
                         'HWPID' => $this->HWPID['ALL'],
                         'PDATA' => false
                     ));
+        /* send DPA request */
         if(!self::send($comstring)){
             return false;
         }
         /* receive DPA response from coordinator */
         $response =  self::receive();
         if($response !== false){
+            /* process response and parse message to IQRF DPA format */
             $r = self::dpa_response($response);
             if($r !== false){
-
+                /* build Addresing Info -> based on the IQRF DPA Technical Guide */
                 $addressinginfo = array(
                     'DevNr' => $r['PDATA'][0],
                     "DID" => $r['PDATA'][1]
@@ -385,7 +409,13 @@ class IQRF{
         return false;
     }
 
+    /**
+    * @brief get Node Map
+    * @param
+    * @return Node Map array of node network addresses or false in case of some error
+    */
     public function getNodeMap(){
+        /* setup DPA command string*/
         $comstring = self::dpa_request(array(
                         'NADDR' => $this->NADDR['COORDINATOR'],
                         'PNUM'  => $this->PNUM['PNUM_COORDINATOR'],
@@ -393,13 +423,16 @@ class IQRF{
                         'HWPID' => $this->HWPID['ALL'],
                         'PDATA' => false
                     ));
+
+        /* send DPA request */
         if(!self::send($comstring)){
             return false;
         }
-        $resp = self::receive();
-        if($resp){
-
-            $map = str_split(substr($resp, 16),2);
+        /* receive DPA response from coordinator */
+        $response = self::receive();
+        if($response){
+            $r = self::dpa_response($response);
+            $map = $r['PDATA'];
             if($map){
                 for ($i=0; $i < count($map); $i++) {
                     if($map[$i] == 0) continue;
@@ -415,12 +448,31 @@ class IQRF{
         return false;
     }
 
+    /**
+    * @brief Set LEDs on IQRF network nodes
+    * @param node - node network addess
+    * @param color - r(red) or g(green) color of LED
+    * @param state - 0 - set off, 1 - set on
+    * @return
+    */
     public function setLED($node, $color, $state)
     {
         $pnum = $color == 'r' ? $this->PNUM['PNUM_LEDR'] :( $color == 'g' ? $this->PNUM['PNUM_LEDG'] : false);
-        $pcom = $state === 1 || $state === 0 ? $state: false;
-        if($pnum === false || $pcom === false) {
-            return 1;
+        $pcom = $state === 1 ? 1 ($state === 0 ? $state: false);
+        if($node <1 || $node > 239){
+            $this->errorcode = 1;
+            $this->errormsg = "Invalid node address!";
+            return false;
+        }
+        if($pnum === false) {
+            $this->errorcode = 2;
+            $this->errormsg = "Invalid color!";
+            return false;
+        }
+        if($pcom === false){
+            $this->errorcode = 3;
+            $this->errormsg = "Invalid state!";
+            return false;
         }
         $comstring = self::dpa_request(array(
                         'NADDR' => $node,
@@ -430,19 +482,24 @@ class IQRF{
                         'PDATA' => false
                     ));
         if(!$comstring){
-            return 2;
+            return false;
         }
         if(!self::send($comstring)){
-            return 3;
+            return false;
         }
         $status = self::receive();             // status confirmation from coordinator
         $noderesponse = self::receive();       // response from node, if node unaccessible -> socket timeout
         if($noderesponse){
             $response = self::dpa_response($noderesponse);
-            return 0;
+            if($response['ErrN'] == 0){
+                return 0;
+            }
+            else{
+                return 2;
+            }
         }
         else{
-            return 2;
+            return 3;
         }
     }
 
@@ -472,6 +529,17 @@ class IQRF{
         // if the requset address is not the coordinator
         // receive status response from coordinator and check error
         $status = self::receive();
+
+        // check errors
+        $s = self::dpa_response($response);
+        if(!$s){
+            return false;
+        }
+        if($s['ErrN'] == 0xFF){ // status confirmation
+            $this->errorcode = $s['ErrN'];
+            $this->errormsg = "";
+            return false;
+        }
 
         // if the requset address is not the coordinator
         // receive DPA response from network nodes and check error

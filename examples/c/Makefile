@@ -1,7 +1,7 @@
 #This is a makefile
 
 CC			:= colorgcc
-CFLAGS  	:= -c -Wall
+CFLAGS		:= -c -Wall
 
 LDFLAGS		:=
 DEPS		:=
