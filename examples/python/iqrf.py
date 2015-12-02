@@ -7,6 +7,8 @@ class IQRF:
     __port = 0
     __sock = 0
 
+    __timeout = 2 # 2 sec socket timeout
+
     #def __init__:
 
     def connect(self, ip, port):
@@ -18,6 +20,7 @@ class IQRF:
         self.__port = port;
         try:
             self.__sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.__sock.settimeout(self.__timeout)
         except socket.error as msg:
             print (msg)
             return False

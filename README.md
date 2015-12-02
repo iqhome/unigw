@@ -7,7 +7,7 @@ $ git clone
 ## Universal Gateway
 
 The RPi based device is a gateway between your [IQRF DPA][iqrfdpa] wireless network and your custom application.
-The Universal Gateway is simplify the development process with IQRF networks.
+The Universal Gateway is designed for simplify the development process with IQRF networks.
 
 ## unid
 The unid daemon services:
@@ -53,18 +53,24 @@ $ java Gateway
 
 #### PHP example
 
-
+You can run the example with:
+```
+$ php gateway.php
+```
 
 #### Python example
 
-
+You can run the example with:
+```
+$ python gateway.py
+```
 
 ### Simple WEB Application
 
-The Simple WEB Application
-The application on page loading build the actual network.
-At first use you should
-
+At first use you should set up the IQRF network with IQRF IDE.
+After some nodes bonded to the network the nodes shows up on the page and you can switch on/off the red and green LEDs by click on it.
+The Simple WEB Application is a demo to show how simple to make a WEB based application with the Universal Gateway.
+<!---
 ## RPi image
 
  - Read-Write file system
@@ -79,7 +85,7 @@ Default image contains:
  - Python v2.7.3
  - Lighttpd WEB server
  - login: root, password: iqhome
-
+-->
 
 
 [iqhome]: <http://iqhome.org>
