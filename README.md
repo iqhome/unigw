@@ -1,7 +1,7 @@
 # [IQHome Universal Gateway][iqhome-unigw]
 
 ```
-$ git clone
+$ git clone https://github.com/iqhome/unigw.git
 ```
 
 ## Universal Gateway
