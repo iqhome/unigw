@@ -457,8 +457,8 @@ class IQRF{
     */
     public function setLED($node, $color, $state)
     {
-        $pnum = $color == 'r' ? $this->PNUM['PNUM_LEDR'] :( $color == 'g' ? $this->PNUM['PNUM_LEDG'] : false);
-        $pcom = $state === 1 ? 1 ($state === 0 ? $state: false);
+        $pnum = $color == 'r' ? $this->PNUM['PNUM_LEDR'] : ( $color == 'g' ? $this->PNUM['PNUM_LEDG'] : false);
+        $pcom = $state === 1 ? 1 : ($state === 0 ? $state: false);
         if($node <1 || $node > 239){
             $this->errorcode = 1;
             $this->errormsg = "Invalid node address!";

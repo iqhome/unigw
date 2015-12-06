@@ -1,11 +1,13 @@
 <?php
 
 include_once '../../php/IQRF.Class.php';
-/*
-echo 'FAIL';
-exit();
-*/
 
+if(!class_exists('IQRF')){
+	echo "IQRF class doesn't exists!\n";
+	exit();
+}
+
+/* decode JSON */
 $request = json_decode($_POST['request']);
 
 if($request === NULL){
