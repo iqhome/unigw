@@ -20,7 +20,7 @@ $iqrf = new IQRF();
 
 /* connect to unid network interface */
 if(!$iqrf->connect()){
-    echo "FAIL";
+    echo "Can't conenct to deamon!";
     exit();
 }
 /* default error message */
@@ -55,12 +55,25 @@ switch ($request->action) {
     case 'setLED':
         /* send set LED request */
         if(($e = $iqrf->setLED($request->node, $request->color, $request->state))){
-            //echo "Can't set LED!    errorCode: ".$e;
             $response = false;
-            $errormsg = "Node unreachable!";
+            $errormsg = $iqrf->errormsg;
         }
         else{
             $response = json_encode(array('led' => true ));
+        }
+        break;
+
+    case 'getFRC':
+        $FRCdata = $iqrf->getFRC($request->type);
+        if($FRCdata === false){
+            $response = false;
+            $errormsg = $iqrf->errormsg ? $iqrf->errormsg : "getFRC error!";
+            break;
+        }
+        else{
+            $response = json_encode(array(
+                'data' => $FRCdata 
+            ));
         }
         break;
 

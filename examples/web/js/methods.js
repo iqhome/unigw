@@ -1,4 +1,6 @@
 
+var AjaxTraceEnable = false;
+var DebugEnable = true;
 
 var gwio = "php/io.php";
 
@@ -9,15 +11,11 @@ function ajax(script, request, callback, arg){
 		if (r.readyState != 4 || r.status != 200){
 		 	return;
 		}
-		if(DebugEnable)
+		if(AjaxTraceEnable)
 			console.log(r.responseText);
 		if(r.responseText != ''){
-            try {
+            if(callback)
             	callback(r.responseText, arg);
-            } catch (e) {
-	            console.log(e);
-
-            }
 		}
 	};
 	r.open("POST", script , true);
@@ -37,13 +35,15 @@ function ajaxJSON (request , callback, arg) {
         var json = false;
         try{
             json = JSON.parse(d);
-        	callback(json, arg);
         }
         catch(e){
 			if(DebugEnable)
 				console.log(e);
         	callback(false, d);
+        	return;
         }
+        if(callback)
+        	callback(json, arg);
     }, arg);
 }
 

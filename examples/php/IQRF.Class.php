@@ -161,6 +161,19 @@ class IQRF{
         'FRC_USER_2BYTE_TO' => 0xFF
     );
 
+    private $FRC_COM_IQHOME = array(
+        
+        'rssi' => 0xDF,
+        'status' => 0xC0,
+        'temp050' => 0xC1,
+        'temp025' => 0xC2,
+        'humidity050' => 0xC3,
+        'co2010' => 0xC4,
+        'co2001' => 0xF2,
+        'temp_word' => 0xF0,
+        'humidity_word' => 0xF1
+    );
+
     private $TR_SERIES = array(
         "TR-52D",      //0
         "TR-58D-RJ",    //1
@@ -283,7 +296,7 @@ class IQRF{
                     echo "invalid pdata item";
                     return false;
                 }
-                $pdata = self::zf($request['PDATA'][$i],2);
+                $pdata .= self::zf($request['PDATA'][$i],2);
             }
         }
         else{
@@ -355,7 +368,7 @@ class IQRF{
             /* process response and parse message to IQRF DPA format */
             $r = self::dpa_response($response);
             /* check response validity */
-            if($r !== false){
+            if($r !== false && $r['ErrN'] == 0){
                 /* build Module Info array -> based on the IQRF OS reference guide */
                 $moduleinfo = array(
                     'MID' => strtoupper(self::zf($r['PDATA'][3],2).self::zf($r['PDATA'][2],2).self::zf($r['PDATA'][1],2).self::zf($r['PDATA'][0],2)),
@@ -501,6 +514,86 @@ class IQRF{
         else{
             return 3;
         }
+    }
+     /**
+    * @brief Get FRC data without extra results and decode 
+    * @param command string
+    * @return decoded set of node values
+    */
+    public function getFRC($command){
+
+        // check command is valid
+        if(!array_key_exists($command, $this->FRC_COM_IQHOME)) {
+            $this->errorcode = 1;
+            $this->errormsg = "Invalid command!";
+            return false;
+        }
+        $FRCcommand = $this->FRC_COM_IQHOME[$command];
+
+        /* setup DPA command string*/
+        $comstring = self::dpa_request(array(
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_FRC'],
+                        'PCMD'  => $this->PCMD['CMD_FRC_SEND'],
+                        'HWPID' => $this->HWPID['ALL'],
+                        'PDATA' => array($FRCcommand, 0, 0)
+                    ));
+
+        /* send DPA request */
+        if(!self::send($comstring)){
+            return false;
+        }
+        /* receive DPA response from coordinator */
+        $response = self::receive();
+        if($response){
+            $r = self::dpa_response($response);
+            $FRCdata = $r['PDATA'];
+            if($FRCdata){         
+                return self::getFRCDecode($FRCcommand, $FRCdata);
+            }
+            else{
+                $this->errorcode = 2;
+                $this->errormsg = "No PDATA";
+            }
+        }
+        return false;
+    }
+    private function getFRCDecode($command, $data){
+
+        $FRC_OFFSET = 1; // for FRC nodes payload offset
+        $valuelen = count($data) - $FRC_OFFSET; // 2 f
+
+        if($command >= 0x00 && $command <= 0x7F ){
+            $fieldlen = 1; // 2 bits
+        }
+        else if($command >= 0x80 && $command <= 0xDF ){
+            $fieldlen = 2; // 1 byte
+        }
+        else{
+            $fieldlen = 3; // 2 byte
+        }
+        if($command >= 0x00 && $command <= 0x7F ){
+            $bitindex = 0;
+            for ($nodeindex = 0, $dataindex = $FRC_OFFSET; $dataindex < $valuelen; $nodeindex++){
+                $fieldValues[$nodeindex] = ($data[$dataindex] >> $bitindex) & 0x03;
+                $bitindex+=2;
+                if($bitindex > 6){ // all data shifted
+                    $bitindex = 0;
+                    $dataindex++;
+                }
+            }
+        }
+        else if($command >= 0x80 && $command <= 0xDF ){
+            for ($nodeindex = 0, $dataindex = $FRC_OFFSET; $dataindex < $valuelen; $dataindex++, $nodeindex++){
+                $fieldValues[$nodeindex] = $data[$dataindex];
+            }
+        }
+        else{
+            for ($nodeindex = 0, $dataindex = $FRC_OFFSET; $dataindex < $valuelen; $dataindex += 2, $nodeindex++){
+                $fieldValues[$nodeindex] = $data[$dataindex] | ($data[$dataindex + 1] << 8);
+            }
+        }
+        return $fieldValues;
     }
 
     /* example method */

@@ -1,6 +1,6 @@
 #This is a makefile
 
-CC			:= colorgcc
+CC		:= gcc
 CFLAGS		:= -c -Wall
 
 LDFLAGS		:=
