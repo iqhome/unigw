@@ -2,7 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Temperaure Sensor Demo</title>
+  <title>IQ Home Universal Gateway Demo</title>
   <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
   <script src="js/methods.js" charset="utf-8"></script>
   <script src="js/sensors.js" charset="utf-8"></script>
@@ -10,8 +10,9 @@
   <link rel="stylesheet" href="style/style.css" media="screen" title="no title" charset="utf-8">
 </head>
 <body>
- <div id="head">
-  <a class="relink" href="index.php">Demo Appication</a>
+  <div id="head">
+    <a class="relink" href="index.php">Demo Appication</a>
+    <a class="relink active-page-link" href="temp.php">Sensor Demo</a>
   </div>
   <div class="main">
     <div class="title">

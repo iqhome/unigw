@@ -67,7 +67,7 @@ switch ($request->action) {
         $FRCdata = $iqrf->getFRC($request->type);
         if($FRCdata === false){
             $response = false;
-            $errormsg = $iqrf->errormsg ? $iqrf->errormsg : "getFRC error!";
+            $errormsg = $iqrf->errormsg ? $iqrf->errormsg : "FRC error!";
             break;
         }
         else{

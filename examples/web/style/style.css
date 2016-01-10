@@ -24,11 +24,13 @@ button{
 }
 .nodeid{
     margin-top: 40px;
-    font-size: 18pt;
+    font-size: 22px;
 }
 .leds{
     padding: 10px;
     position: absolute;
+    left: 0;
+    right: 0;
     bottom: 0;
     text-align: center;
 }
@@ -57,15 +59,14 @@ button{
 }
 
 .title{
-    position: relative;
-    top: 25px;
-    font-size: 16pt;
+    padding-top: 25px;
+    font-size: 24px;
 }
 .subtitle{
-    font-size: 14pt;
+    font-size: 20px;
 }
 .infohead{
-    font-size: 12pt;
+    font-size: 20px;
     text-align: left;
     padding-left: 10px;
     margin-bottom: 15px;
@@ -78,13 +79,13 @@ button{
     padding: 10px;
 }
 #info td{
-    font-size:  10pt;
+    font-size:  13px;
     padding: 0 15px 1px 10px;
     text-align: left;
     vertical-align: middle;
 }
 #control td{
-    font-size:  10pt;
+    font-size:  14px;
     padding: 5px 20px 5px 10px;
     text-align: left;
     vertical-align: middle;
@@ -98,48 +99,62 @@ button{
     border: 1px solid #aaa;
     padding: 18px;
     text-align: left;
-    font-size: 11pt;
+    font-size: 13px;
     white-space: pre-wrap;
 }
 
 .relink{
     text-decoration: none;
     padding: 3px 12px;
-    background-color: #f1f0f0;
     border: 1px solid  #555050;
+    background-color: #f2f0f0;
 }
 .relink:visited { 
     color:  #353030;
 }
+.relink:hover{
+    background-color: #fff;
+}
+.active-page-link, .active-page-link:visited{
+    background-color: #fff;
+    color: #C00000;
+}
 
 .sensor{
-    border: 1px solid  #C00000;
     width: 190px;
     height: 110px;
     margin: 10px;
+    padding: 10px;
     display: inline-block;
     position: relative;
-    padding: 10px;
-}
-.sensor-name{
-    font-size: 18pt;
+    border: 1px solid  #C00000;
 }
 .sensorcont{
-    padding: 10px;
+
     position: absolute;
+    left: 0;
+    right: 0;
     bottom: 0;
     text-align: center;
+    height:     85px;
 }
+.sensor-name{
+    font-size: 22px;
+    height:     45px;
+}
+
 .sensor-value{
     padding:    5px;
-    font-size: 20pt;
+    font-size: 24px;
     color:  #252020;
+    height:    35px;
 }
 .sensor-unit{
-    font-size: 14pt;
+    font-size: 18px;
 }
 .chart{
     height: 400px;
+    padding:   10px;
 }
 .start-button{
     text-decoration: none;

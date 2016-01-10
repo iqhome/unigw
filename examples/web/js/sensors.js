@@ -71,26 +71,28 @@ function Sensor(parent, id){
     nid.className = "sensor-name";
     sensor.appendChild(nid);
 
-    /* create LEDs on sensors body */
     var sensorcont = document.createElement("div");
-    sensorcont.className = "sensorcont";
+    sensorcont.className  = "sensorcont";
     sensor.appendChild(sensorcont);
 
+    /* create LEDs on sensors body */
     var sensorvalue = document.createElement("div");
     sensorvalue.innerHTML = "-";
     sensorvalue.className = "sensor-value";
-    sensor.appendChild(sensorvalue);
+    sensorcont.appendChild(sensorvalue);
 
     var sensorunit = document.createElement("div");
-    sensorunit.innerHTML = "°C";
+    sensorunit.innerHTML = "";
     sensorunit.className = "sensor-unit";
-    sensor.appendChild(sensorunit);
+    sensorcont.appendChild(sensorunit);
 
     this.setValue = function(value){
         sensorvalue.innerHTML = value;
+        return this;
     }
     this.setUnit = function(unit){
         sensorunit.innerHTML = unit;
+        return this;
     }
     return this;
 }
@@ -138,6 +140,7 @@ function drawChart(nodes) {
 
         this.chart = new google.visualization.LineChart(document.getElementById('tempchart'));
         this.chart.draw(this.data, options);
+        return this;
     }
 
     this.update = function(values){
@@ -145,9 +148,11 @@ function drawChart(nodes) {
         values.unshift(new Date()); // insert cnt value as first element
         this.data.addRow(values);
         this.chart.draw(this.data, this.options);
+        return this;
     }
     this.clear = function (){
         this.build();
+        return this;
     }
 
 
@@ -159,7 +164,7 @@ function updateValues () {
 
     var request = {
         'action' : 'getFRC',
-        'type'   : SelectedMeasureType // rssi
+        'type'   : SelectedMeasureType 
     };
     ajaxJSON(request, function(response, e){
         if(!response){
@@ -173,6 +178,7 @@ function updateValues () {
                 var value = response.data[i];
                 if(value == 0) {
                     value = "-"; // no response
+                    unit  = "";
                     chartvalue = null;
                 }
                 else{
@@ -194,8 +200,10 @@ function updateValues () {
                         break;
                     }
                 }
-                SensorList[i].setValue(value);
-                SensorList[i].setUnit(unit);
+                console.log(unit)
+                console.log(value)
+                console.log(chartvalue)
+                SensorList[i].setValue(value).setUnit(unit);
                 chartdata.push(chartvalue);
            };
            Chart.update(chartdata);
@@ -240,7 +248,7 @@ function createControlPanel(){
     btn.className = "start-button";
     btn.innerHTML = "Set";
     btn.onclick = function(){
-        var val = interval.value < 3 ? 3 :interval.value;
+        var val = interval.value >= AutoUpdateIntervalMin ? interval.value : AutoUpdateIntervalMin;
         AutoUpdateInterval = interval.value;
     }
     c.appendChild(btn);
@@ -303,9 +311,9 @@ function createControlPanel(){
     r.appendChild(c);
     var c = document.createElement('td');
     r.appendChild(c);
-    var interval = document.createElement('span');
-    interval.id = 'lastupdate';
-    c.appendChild(interval);
+    var lastupdate = document.createElement('span');
+    lastupdate.id = 'lastupdate';
+    c.appendChild(lastupdate);
 }
 
 function StartStopUpdate(){

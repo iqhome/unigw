@@ -1,5 +1,5 @@
 
-var AjaxTraceEnable = false;
+var AjaxTraceEnable = true;
 var DebugEnable = true;
 
 var gwio = "php/io.php";

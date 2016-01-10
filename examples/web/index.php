@@ -10,7 +10,8 @@
 </head>
 <body>
   <div id="head">
-  <a class="relink" href="temp.php">Sensor Demo</a>
+    <a class="relink active-page-link" href="index.php">Demo Appication</a>
+    <a class="relink" href="temp.php">Sensor Demo</a>
   </div>
   <div class="main">
     <div class="title">
