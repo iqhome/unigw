@@ -115,23 +115,6 @@ function createNode(parent, id){
     leds.appendChild(ledr);
 }
 
-function showError(errortext){
-
-    var win = document.createElement('div');
-    win.className = 'error-window';
-    document.body.appendChild(win);
-
-    var etext = document.createElement('div');
-    etext.className = 'error-text';
-    etext.innerHTML = errortext;
-    win.appendChild(etext);
-
-    setTimeout(function(){
-        win.parentNode.removeChild(win);
-    },3000);
-
-}
-
 /* setup instructions if network is empty */
 function createSetUpInstructions(parent) {
 

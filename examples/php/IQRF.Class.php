@@ -221,8 +221,8 @@ class IQRF{
         $this->server = $ip;
         $this->port = $port;
         if(($this->sock = socket_create(AF_INET, SOCK_DGRAM, 0)) === false){
-            $errorcode = socket_last_error();
-            $errormsg = socket_strerror($errorcode);
+            $this->errorcode = socket_last_error();
+            $this->errormsg = socket_strerror($this->errorcode);
             return false;
         }
         socket_set_option($this->sock,SOL_SOCKET,SO_RCVTIMEO,$this->timeout);
@@ -241,8 +241,8 @@ class IQRF{
         if(empty($message) || $message == "") return false;
         if( !socket_sendto($this->sock, $message , strlen($message) , 0 , $this->server , $this->port))
         {
-            $errorcode = socket_last_error();
-            $errormsg = socket_strerror($errorcode);
+            $this->errorcode = socket_last_error();
+            $this->errormsg = socket_strerror($this->errorcode);
             return false;
         }
         return true;
@@ -257,8 +257,8 @@ class IQRF{
         if(!$this->sock) return false;
         if(socket_recv ( $this->sock , $reply , 2045 , MSG_WAITALL ) === FALSE)
         {
-           $errorcode = socket_last_error();
-           $errormsg = socket_strerror($errorcode);
+           $this->errorcode = socket_last_error();
+           $this->errormsg = socket_strerror($this->errorcode);
            return false;
         }
         return $reply;
@@ -495,6 +495,8 @@ class IQRF{
                         'PDATA' => false
                     ));
         if(!$comstring){
+            $this->errorcode = 4;
+            $this->errormsg = "Invalid request string!";
             return false;
         }
         if(!self::send($comstring)){
@@ -505,15 +507,20 @@ class IQRF{
         if($noderesponse){
             $response = self::dpa_response($noderesponse);
             if($response['ErrN'] == 0){
-                return 0;
+                return 1;
             }
             else{
-                return 2;
+                $this->errorcode = 5;
+                $this->errormsg = "DPA error: ".$response['ErrN'];
+                return false;
             }
         }
         else{
-            return 3;
+            $this->errorcode = 6;
+            $this->errormsg = "Node not responding!";
+            return false;
         }
+        return false;
     }
      /**
     * @brief Get FRC data without extra results and decode 

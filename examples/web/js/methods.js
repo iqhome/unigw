@@ -1,5 +1,5 @@
 
-var AjaxTraceEnable = true;
+var AjaxTraceEnable = false;
 var DebugEnable = true;
 
 var gwio = "php/io.php";
@@ -12,11 +12,9 @@ function ajax(script, request, callback, arg){
 		 	return;
 		}
 		if(AjaxTraceEnable)
-			console.log(r.responseText);
-		if(r.responseText != ''){
-            if(callback)
-            	callback(r.responseText, arg);
-		}
+			console.log(r.responseText);		
+        if(callback)
+        	callback(r.responseText, arg);
 	};
 	r.open("POST", script , true);
 	r.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
@@ -35,6 +33,8 @@ function ajaxJSON (request , callback, arg) {
         var json = false;
         try{
             json = JSON.parse(d);
+	        if(callback)
+	        	callback(json, arg);
         }
         catch(e){
 			if(DebugEnable)
@@ -42,11 +42,25 @@ function ajaxJSON (request , callback, arg) {
         	callback(false, d);
         	return;
         }
-        if(callback)
-        	callback(json, arg);
     }, arg);
 }
 
+
+function showError(errortext){
+
+    var win = document.createElement('div');
+    win.className = 'error-window';
+    document.body.appendChild(win);
+
+    var etext = document.createElement('div');
+    etext.className = 'error-text';
+    etext.innerHTML = errortext.length?errortext:"Error!";
+    win.appendChild(etext);
+
+    setTimeout(function(){
+        win.parentNode.removeChild(win);
+    },3000);
+}
 
 function toggleLED(id, led){
 
@@ -60,6 +74,7 @@ function toggleLED(id, led){
 	};
 
 	ajaxJSON(request, function(response, e){
+		
 		if(!response){
 			showError(e);
 		}

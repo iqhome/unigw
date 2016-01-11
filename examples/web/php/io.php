@@ -54,7 +54,8 @@ switch ($request->action) {
 
     case 'setLED':
         /* send set LED request */
-        if(($e = $iqrf->setLED($request->node, $request->color, $request->state))){
+        $LEDresponse = $iqrf->setLED($request->node, $request->color, $request->state);
+        if($LEDresponse === false){
             $response = false;
             $errormsg = $iqrf->errormsg;
         }
@@ -86,6 +87,7 @@ switch ($request->action) {
     default:
         // invalid action
         # code...
+        echo "Invalid action!";
         break;
 }
 
