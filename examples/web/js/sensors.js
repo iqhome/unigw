@@ -168,9 +168,9 @@ function updateValues() {
                 } else {
                     switch (request.type) {
                         case 'temp050':
-                            /* value = (Temperature[Â°C] * 2) + 64 ( 0.5 Â°C resolution ) */
+                            /* value = (Temperature[°C] * 2) + 64 ( 0.5 °C resolution ) */
                             chartvalue = value = (value - 64) / 2;
-                            unit = 'Â°C';
+                            unit = '°C';
                             break;
                         case 'humidity050':
                             /* value = (Humidity[%] * 2) + 1 ( 0.5 % resolution ) */
