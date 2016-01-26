@@ -1,16 +1,14 @@
-
-
-var SensorList=[];  // array for sensor nodes
-var Chart;          // chart
-var UpdateTimeout = null;   
+var SensorList = []; // array for sensor nodes
+var Chart; // chart
+var UpdateTimeout = null;
 // measured types, see IQRF.class.php for more types
 var MeasureTypes = {
-    'Temeperature' : 'temp050',
-    'RSSI' : 'rssi',
-    'Humidity': 'humidity050'  
+    'Temeperature': 'temp050',
+    'RSSI': 'rssi',
+    'Humidity': 'humidity050'
 };
-var SelectedMeasureType = 'temp050';    // actual selected measure type
-var AutoUpdateInterval  = 5; // automatic update interval in sec
+var SelectedMeasureType = 'temp050'; // actual selected measure type
+var AutoUpdateInterval = 5; // automatic update interval in sec
 var AutoUpdateIntervalMin = 5;
 
 /* on page load build the network */
@@ -21,24 +19,24 @@ window.onload = function() {
 
 
 /* create newtwork build network nodes from info, which contains the node map */
-function createNetwork(info){
+
+function createNetwork(info) {
 
     var network = document.getElementById("network");
 
     var request = {
-        'action' : 'getNodeMap'
+        'action': 'getNodeMap'
     };
 
-    ajaxJSON(request, function(response, e){
+    ajaxJSON(request, function(response, e) {
 
         network.innerHTML = "";
-        if(!response){
+        if (!response) {
             showError(e);
             createSetUpInstructions(network);
-        }
-        else{
-            if(!response.nodemap){
-                console.log(response);
+        } else {
+            if (!response.nodemap) {
+                //console.log(response);
                 showError("Can't read node map!");
                 return;
             }
@@ -46,10 +44,12 @@ function createNetwork(info){
                 var id = response.nodemap[i];
                 var s = new Sensor(network, id);
                 SensorList[id] = s;
-            }        
-            google.charts.load('current', {packages: ['corechart', 'line']});
-            google.charts.setOnLoadCallback(function(){ 
-                Chart = drawChart(response.nodemap); 
+            }
+            google.charts.load('current', {
+                packages: ['corechart', 'line']
+            });
+            google.charts.setOnLoadCallback(function() {
+                Chart = drawChart(response.nodemap);
             });
             createControlPanel();
             updateValues();
@@ -58,7 +58,8 @@ function createNetwork(info){
 }
 
 /* create network nodes like DCTR modules */
-function Sensor(parent, id){
+
+function Sensor(parent, id) {
 
     /* creaet sensor body */
     var sensor = document.createElement("div");
@@ -67,12 +68,12 @@ function Sensor(parent, id){
     parent.appendChild(sensor);
     /* create sensor ID */
     var nid = document.createElement("div");
-    nid.innerHTML = "Sensor "+id;
+    nid.innerHTML = "Node " + id;
     nid.className = "sensor-name";
     sensor.appendChild(nid);
 
     var sensorcont = document.createElement("div");
-    sensorcont.className  = "sensorcont";
+    sensorcont.className = "sensorcont";
     sensor.appendChild(sensorcont);
 
     /* create LEDs on sensors body */
@@ -86,11 +87,11 @@ function Sensor(parent, id){
     sensorunit.className = "sensor-unit";
     sensorcont.appendChild(sensorunit);
 
-    this.setValue = function(value){
+    this.setValue = function(value) {
         sensorvalue.innerHTML = value;
         return this;
     }
-    this.setUnit = function(unit){
+    this.setUnit = function(unit) {
         sensorunit.innerHTML = unit;
         return this;
     }
@@ -105,12 +106,12 @@ function drawChart(nodes) {
     this.chart = null;
     this.options = null;
 
-    this.build = function(){        
+    this.build = function() {
         var cnt = 0;
         this.data = new google.visualization.DataTable();
         this.data.addColumn('datetime', 'X');
-        for (var i = 0; i < this.nodes.length; i++) {            
-            this.data.addColumn('number', "Node "+this.nodes[i]);
+        for (var i = 0; i < this.nodes.length; i++) {
+            this.data.addColumn('number', "Node " + this.nodes[i]);
         };
 
         this.options = {
@@ -127,14 +128,14 @@ function drawChart(nodes) {
         return this;
     }
 
-    this.update = function(values){
+    this.update = function(values) {
 
         values.unshift(new Date()); // insert cnt value as first element
         this.data.addRow(values);
         this.chart.draw(this.data, this.options);
         return this;
     }
-    this.clear = function (){
+    this.clear = function() {
         this.build();
         return this;
     }
@@ -144,68 +145,69 @@ function drawChart(nodes) {
 
     return this;
 }
-function updateValues () {   
+
+function updateValues() {
 
     var request = {
-        'action' : 'getFRC',
-        'type'   : SelectedMeasureType 
+        'action': 'getFRC',
+        'type': SelectedMeasureType
     };
-    ajaxJSON(request, function(response, e){
-        if(!response){
+    ajaxJSON(request, function(response, e) {
+        if (!response) {
             showError(e);
-        }
-        else{
+        } else {
             refreshLastUpdate();
             var chartdata = [];
 
-           for (i in SensorList) {
+            for (i in SensorList) {
                 var value = response.data[i];
-                if(value == 0) {
+                if (value == 0) {
                     value = "-"; // no response
-                    unit  = "";
+                    unit = "";
                     chartvalue = null;
-                }
-                else{
-                    switch(request.type){
+                } else {
+                    switch (request.type) {
                         case 'temp050':
-                            /* value = (Temperature[°C] * 2) + 64 ( 0.5 °C resolution ) */
-                            chartvalue = value = (value-64)/2;
-                            unit = '°C';
-                        break;
+                            /* value = (Temperature[Â°C] * 2) + 64 ( 0.5 Â°C resolution ) */
+                            chartvalue = value = (value - 64) / 2;
+                            unit = 'Â°C';
+                            break;
                         case 'humidity050':
                             /* value = (Humidity[%] * 2) + 1 ( 0.5 % resolution ) */
-                            chartvalue = value = (value-1)/2;
+                            chartvalue = value = (value - 1) / 2;
                             unit = "%rH";
-                        break;
-                        case 'rssi':                                                
+                            break;
+                        case 'rssi':
                         default:
                             unit = "";
                             chartvalue = value;
-                        break;
+                            break;
                     }
                 }
-                console.log(unit)
-                console.log(value)
-                console.log(chartvalue)
+                //console.log(unit)
+                //console.log(value)
+                //console.log(chartvalue)
                 SensorList[i].setValue(value).setUnit(unit);
                 chartdata.push(chartvalue);
-           };
-           Chart.update(chartdata);
+            };
+            Chart.update(chartdata);
         }
     });
 
-    UpdateTimeout = setTimeout(function(){updateValues();}, AutoUpdateInterval*1000);
+    UpdateTimeout = setTimeout(function() {
+        updateValues();
+    }, AutoUpdateInterval * 1000);
 
 }
 
 
-function createControlPanel(){
+function createControlPanel() {
 
     var contorlcont = document.createElement("div");
     contorlcont.id = 'control';
     document.body.appendChild(contorlcont);
 
-     var head = document.createElement("div");
+    var head = document.createElement("div");
     head.innerHTML = "Control Panel";
     head.className = 'infohead';
     contorlcont.appendChild(head);
@@ -231,7 +233,7 @@ function createControlPanel(){
     var btn = document.createElement('button');
     btn.className = "start-button";
     btn.innerHTML = "Set";
-    btn.onclick = function(){
+    btn.onclick = function() {
         var val = interval.value >= AutoUpdateIntervalMin ? interval.value : AutoUpdateIntervalMin;
         AutoUpdateInterval = interval.value;
     }
@@ -249,15 +251,15 @@ function createControlPanel(){
     mtype.id = 'mtype';
     c.appendChild(mtype);
 
-    mtype.onchange = function(){
+    mtype.onchange = function() {
         Chart.clear();
         SelectedMeasureType = this.value;
     }
 
-    for(var key in MeasureTypes){
+    for (var key in MeasureTypes) {
         var opt = document.createElement('option');
         opt.value = MeasureTypes[key];
-        if(opt.value == SelectedMeasureType){
+        if (opt.value == SelectedMeasureType) {
             opt.selected = true;
         }
         opt.innerHTML = key;
@@ -277,11 +279,10 @@ function createControlPanel(){
     var btn = document.createElement('button');
     btn.className = "start-button";
     btn.innerHTML = "Running";
-    btn.onclick = function(){
-        if(StartStopUpdate()){
+    btn.onclick = function() {
+        if (StartStopUpdate()) {
             btn.innerHTML = "Running";
-        }
-        else{
+        } else {
             btn.innerHTML = "Stopped";
         }
     }
@@ -300,19 +301,18 @@ function createControlPanel(){
     c.appendChild(lastupdate);
 }
 
-function StartStopUpdate(){
-    if(!UpdateTimeout){
+function StartStopUpdate() {
+    if (!UpdateTimeout) {
         updateValues();
         return true;
-    }
-    else{
+    } else {
         clearTimeout(UpdateTimeout);
         UpdateTimeout = null;
         return false;
     }
 }
 
-function refreshLastUpdate(){
+function refreshLastUpdate() {
     var l = document.getElementById('lastupdate');
-    if(l) l.innerHTML = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    if (l) l.innerHTML = new Date().toISOString().slice(0, 19).replace('T', ' ');
 }
