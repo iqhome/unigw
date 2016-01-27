@@ -163,6 +163,8 @@ class IQRF{
 
     private $FRC_COM_IQHOME = array(
         
+        'tempdpa' => 0x80, // default temperature DPA command
+
         'rssi' => 0xDF,
         'status' => 0xC0,
         'temp050' => 0xC1,

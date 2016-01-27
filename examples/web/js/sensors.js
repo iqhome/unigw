@@ -3,11 +3,14 @@ var Chart; // chart
 var UpdateTimeout = null;
 // measured types, see IQRF.class.php for more types
 var MeasureTypes = {
+    'Temperature' : 'tempdpa'
+    /*
     'Temeperature': 'temp050',
     'RSSI': 'rssi',
     'Humidity': 'humidity050'
+    */
 };
-var SelectedMeasureType = 'temp050'; // actual selected measure type
+var SelectedMeasureType = 'tempdpa'; // actual selected measure type
 var AutoUpdateInterval = 5; // automatic update interval in sec
 var AutoUpdateIntervalMin = 5;
 
@@ -167,6 +170,11 @@ function updateValues() {
                     chartvalue = null;
                 } else {
                     switch (request.type) {
+                         case 'tempdpa':
+                            /* value = (Temperature[°C] * 2) + 64 ( 0.5 °C resolution ) */
+                            chartvalue = value;
+                            unit = '°C';
+                            break;
                         case 'temp050':
                             /* value = (Temperature[°C] * 2) + 64 ( 0.5 °C resolution ) */
                             chartvalue = value = (value - 64) / 2;
