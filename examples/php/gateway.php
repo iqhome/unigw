@@ -31,22 +31,56 @@ else{
     echo "Can't get addressing info!";
     exit();
 }
-
+// test RTCC
+echo "RTCC set: ";
 if(($response = $iqrf->setRTCCTimeBCD()) !== false){
-    echo "RTCC set OK\n";
+    echo "OK";
     echo"\n";
 }
 else{
-    echo "Can't get addressing info!";
+    echo "Failed: Can't set RTCC!";
     exit();
 }
+echo "Get time from RTCC: ";
 if(($response = $iqrf->getRTCCTime()) !== false){
-    echo "RTCC: ";
     echo $response;
     echo"\n";
 }
 else{
-    echo "Can't get addressing info!";
+    echo "Failed: Can't read data from RTCC!";
+    exit();
+}
+
+// test EEPROM
+$teststr = "We love IQRF!";
+$testdata = unpack('C*',$teststr);
+
+echo "Write data to EEPROM: ";
+if(($response = $iqrf->writeEEPROM(0, $testdata)) !== false){
+    echo "OK";
+    echo"\n";
+}
+else{
+    echo "Failed: Can't write EEPROM!";
+    exit();
+}
+
+echo "Read data from EEPROM: ";
+if(($response = $iqrf->readEEPROM(0, count($testdata))) !== false){
+    echo implode(array_map("chr", $response));;
+    echo"\n";
+    echo "Clean up EEPROM test! ";
+    $cleanup = array_pad(array(),count($testdata), 0);
+    if($iqrf->writeEEPROM(0, $cleanup) !== false){
+        echo "OK!";
+    }
+    else{
+        echo "Failed!";
+    }
+    echo"\n";
+}
+else{
+    echo "Failed: Can't read EEPROM!";
     exit();
 }
 ?>

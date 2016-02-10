@@ -166,7 +166,9 @@ class IQRF{
         'READ_RTCC' => 0x02,
         'WRITE_RTCC' => 0x03,
         'READ_RTCC_SRAM' => 0x04,
-        'WRITE_RTCC_SRAM' => 0x05
+        'WRITE_RTCC_SRAM' => 0x05,
+        'READ_EEPROM' => 0x06,
+        'WRITE_EEPROM' => 0x07
 
     );
 
@@ -622,6 +624,74 @@ class IQRF{
         }
         return false;
     }
+    public function writeEEPROM($address = 0x00, $data = NULL){
+
+        if(!$data || !is_array($data)) return false;
+        $addra = array(
+            $address & 0x00FF,
+            ($address >> 8) & 0x00FF
+        );
+        $pdata = array_merge($addra, $data);
+
+        $comstring = self::dpa_request(array(
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_USER'],
+                        'PCMD'  => $this->USER_COMS['WRITE_EEPROM'],
+                        'HWPID' => $this->HWPID['ALL'],
+                        'PDATA' => $pdata
+                    ));
+        /* send DPA request */
+        if(!self::send($comstring)){
+            return false;
+        }
+        /* receive DPA response from coordinator */
+        $response =  self::receive();
+        if($response !== false){
+            /* process response and parse message to IQRF DPA format */
+            $r = self::dpa_response($response);
+            if($r !== false && $r['ErrN'] == 0){                
+                return true;
+            }
+        }
+        return false;
+    }
+    public function readEEPROM($address = 0x00, $length = 0){
+
+        if(!$length) return false;
+        if($length > 255) {
+            $this->errorcode = 1;
+            $this->errormsg = "Can't read ".$length." bytes once!";
+            return false;
+        }
+
+        $pdata = array(
+            $address & 0x00FF,
+            ($address >> 8) & 0x00FF,
+            $length
+        );
+
+        $comstring = self::dpa_request(array(
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_USER'],
+                        'PCMD'  => $this->USER_COMS['READ_EEPROM'],
+                        'HWPID' => $this->HWPID['ALL'],
+                        'PDATA' => $pdata
+                    ));
+        /* send DPA request */
+        if(!self::send($comstring)){
+            return false;
+        }
+        /* receive DPA response from coordinator */
+        $response =  self::receive();
+        if($response !== false){
+            /* process response and parse message to IQRF DPA format */
+            $r = self::dpa_response($response);
+            if($r !== false && $r['ErrN'] == 0){                
+                return $r['PDATA'];
+            }
+        }
+        return false;
+    }
      /**
     * @brief Get FRC data without extra results and decode 
     * @param command string
@@ -665,6 +735,7 @@ class IQRF{
         }
         return false;
     }
+
     private function getFRCDecode($command, $data){
 
         $FRC_OFFSET = 1; // for FRC nodes payload offset
