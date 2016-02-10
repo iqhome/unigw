@@ -161,6 +161,15 @@ class IQRF{
         'FRC_USER_2BYTE_TO' => 0xFF
     );
 
+    private $USER_COMS = array(
+        'READ_COORD_STATUS' => 0x00,
+        'READ_RTCC' => 0x02,
+        'WRITE_RTCC' => 0x03,
+        'READ_RTCC_SRAM' => 0x04,
+        'WRITE_RTCC_SRAM' => 0x05
+
+    );
+
     private $FRC_COM_IQHOME = array(
         
         'tempdpa' => 0x80, // default temperature DPA command
@@ -271,7 +280,7 @@ class IQRF{
     * @param request - IQRF DPA compatible array
     * @return IQRF DPA hex string if build was successful, false in case of some error
     */
-    private function dpa_request($request = false){
+    private function dpa_request($request = false, $format = true){
 
         if($request === false){
             echo "nodata";
@@ -292,13 +301,17 @@ class IQRF{
         /* create HWPID string */
         $hwpid = self::zf($request['HWPID'], 4);
         /* if PDATA avilable create PDATA STRING */
+        $pdata = "";
         if(isset($request['PDATA']) && $request['PDATA'] !== false){
             for ($i=0; $i < count($request['PDATA']); $i++) {
                 if($request['PDATA'][$i] < 0 || $request['PDATA'][$i] > 0xFF ) {
                     echo "invalid pdata item";
                     return false;
                 }
-                $pdata .= self::zf($request['PDATA'][$i],2);
+                if($format)
+                    $pdata .= self::zf($request['PDATA'][$i],2);
+                else
+                    $pdata .= $request['PDATA'][$i];
             }
         }
         else{
@@ -343,6 +356,9 @@ class IQRF{
     */
     private function zf($value, $length){
         return str_pad(dechex($value), $length, 0, STR_PAD_LEFT);
+    }
+    private function zfd($value, $length){
+        return str_pad($value, $length, 0, STR_PAD_LEFT);
     }
 
     /**
@@ -524,6 +540,88 @@ class IQRF{
         }
         return false;
     }
+
+    public function getRTCCTime(){
+
+        $pdata = array(0x01); // biinary format
+        $comstring = self::dpa_request(array(
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_USER'],
+                        'PCMD'  => $this->USER_COMS['READ_RTCC'],
+                        'HWPID' => $this->HWPID['ALL'],
+                        'PDATA' => $pdata
+                    ));
+
+        /* send DPA request */
+        if(!self::send($comstring)){
+            return false;
+        }
+        /* receive DPA response from coordinator */
+        $response =  self::receive();
+        if($response !== false){
+            /* process response and parse message to IQRF DPA format */
+            $r = self::dpa_response($response);
+            if($r !== false){
+                /* build Addresing Info -> based on the IQRF DPA Technical Guide */
+                $status = $r['PDATA'][0];
+                $sec = $r['PDATA'][1];
+                $min = $r['PDATA'][2];
+                $hour = $r['PDATA'][3];
+                $wday = $r['PDATA'][4];
+                $mday = $r['PDATA'][5];
+                $mon = $r['PDATA'][6];
+                $year = $r['PDATA'][7];
+                $dt = ($year+2000)."-".self::zfd($mon,2)."-".self::zfd($mday,2)." ".self::zfd($hour,2).":".self::zfd($min,2).":".self::zfd($sec,2);
+            return $dt;
+            }
+        }
+        return false;
+    }
+    public function setRTCCTimeBCD()
+    {
+        $n = getdate();
+        $mode = self::zfd(0, 2);
+        $sec = self::zfd($n['seconds'], 2);
+        $min = self::zfd($n['minutes'], 2);
+        $hour = self::zfd($n['hours'], 2);
+        $mday = self::zfd($n['mday'], 2);
+        $wday = self::zfd($n['wday'], 2);
+        $mon = self::zfd($n['mon'], 2);
+        $year = self::zfd($n['year']%2000, 2);
+
+        $pdata = array(
+                $mode,   // Time format: BCD Format
+                $sec,
+                $min,
+                $hour,
+                $wday,
+                $mday,
+                $mon,
+                $year
+                );
+        
+        $comstring = self::dpa_request(array(
+                        'NADDR' => $this->NADDR['COORDINATOR'],
+                        'PNUM'  => $this->PNUM['PNUM_USER'],
+                        'PCMD'  => $this->USER_COMS['WRITE_RTCC'],
+                        'HWPID' => $this->HWPID['ALL'],
+                        'PDATA' => $pdata
+                    ), false);
+        /* send DPA request */
+        if(!self::send($comstring)){
+            return false;
+        }
+        /* receive DPA response from coordinator */
+        $response =  self::receive();
+        if($response !== false){
+            /* process response and parse message to IQRF DPA format */
+            $r = self::dpa_response($response);
+            if($r !== false && $r['ErrN'] == 0){               
+                return true;
+            }
+        }
+        return false;
+    }
      /**
     * @brief Get FRC data without extra results and decode 
     * @param command string
@@ -604,6 +702,7 @@ class IQRF{
         }
         return $fieldValues;
     }
+
 
     /* example method */
 

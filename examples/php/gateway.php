@@ -31,4 +31,22 @@ else{
     echo "Can't get addressing info!";
     exit();
 }
+
+if(($response = $iqrf->setRTCCTimeBCD()) !== false){
+    echo "RTCC set OK\n";
+    echo"\n";
+}
+else{
+    echo "Can't get addressing info!";
+    exit();
+}
+if(($response = $iqrf->getRTCCTime()) !== false){
+    echo "RTCC: ";
+    echo $response;
+    echo"\n";
+}
+else{
+    echo "Can't get addressing info!";
+    exit();
+}
 ?>

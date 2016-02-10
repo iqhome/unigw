@@ -62,3 +62,8 @@ class IQRF:
         com_getNodeNum = "00000000FFFF" #array( 0x00, 0x00, 0x00, 0x00, 0xFF, 0xFF );
         self.send(com_getNodeNum)
         return self.recv();
+
+    def getRTCCTimeBCD(self):
+        com_getRTCCTimeBCD = "00002002ffff0041161803100216" #array( 0x00, 0x00, 0x20, 0x02, 0xFF, 0xFF, 0x00 );
+        self.send(com_getRTCCTimeBCD)
+        return self.recv();
