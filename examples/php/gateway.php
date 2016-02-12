@@ -8,7 +8,7 @@ include_once 'IQRF.Class.php';
 $iqrf = new IQRF();
 
 if(!$iqrf->connect()){
-    echo "Can't create socket!";
+    echo "Can't create socket!\n";
     exit();
 }
 
@@ -18,7 +18,7 @@ if(($response = $iqrf->getModuleInfo()) !== false){
     echo"\n";
 }
 else{
-    echo "Can't get Module info!";
+    echo "Can't get Module info!\n";
     exit();
 }
 
@@ -28,7 +28,7 @@ if(($response = $iqrf->getAddressingInfo()) !== false){
     echo"\n";
 }
 else{
-    echo "Can't get addressing info!";
+    echo "Can't get addressing info!\n";
     exit();
 }
 // test RTCC
@@ -38,7 +38,7 @@ if(($response = $iqrf->setRTCCTimeBCD()) !== false){
     echo"\n";
 }
 else{
-    echo "Failed: Can't set RTCC!";
+    echo "Failed: Can't set RTCC!\n";
     exit();
 }
 echo "Get time from RTCC: ";
@@ -47,7 +47,7 @@ if(($response = $iqrf->getRTCCTime()) !== false){
     echo"\n";
 }
 else{
-    echo "Failed: Can't read data from RTCC!";
+    echo "Failed: Can't read data from RTCC!\n";
     exit();
 }
 
@@ -61,7 +61,7 @@ if(($response = $iqrf->writeEEPROM(0, $testdata)) !== false){
     echo"\n";
 }
 else{
-    echo "Failed: Can't write EEPROM!";
+    echo "Failed: Can't write EEPROM!\n";
     exit();
 }
 
@@ -80,7 +80,7 @@ if(($response = $iqrf->readEEPROM(0, count($testdata))) !== false){
     echo"\n";
 }
 else{
-    echo "Failed: Can't read EEPROM!";
+    echo "Failed: Can't read EEPROM!\n";
     exit();
 }
 ?>
